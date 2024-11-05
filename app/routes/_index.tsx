@@ -1,8 +1,10 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
 import type { MetaFunction } from "@remix-run/node";
 import { SetStateAction, useEffect, useState } from "react";
-import axios, { isCancel, AxiosError } from "axios";
+import axios, { AxiosResponse, AxiosError } from "axios";
 import MonacoEditor from "~/components/Editor";
+import { Puff, ThreeDots } from "react-loading-icons";
+import CodeExecutor from "~/components/CodeExecutor";
 
 export const meta: MetaFunction = () => {
   return [
@@ -11,81 +13,84 @@ export const meta: MetaFunction = () => {
   ];
 };
 
+// Define the structure of a language option object
 interface LanguageOption {
   id: number;
   name: string;
 }
-export default function Index() {
-  const [languages, setLanguages] = useState([]);
-  const languageDict: any = {};
 
+interface CodeExecutionResponse {
+  stdout: string;
+  stderr: string;
+  error: string;
+  status: number;
+}
+
+export default function Index() {
+  const [languages, setLanguages] = useState<LanguageOption[]>([]); // Typing the languages state as an array of LanguageOption
+  const languageDict: Record<string, string> = {}; // Using Record for languageDict to map string keys to string values
+
+  // Populate the language dictionary
   languages.forEach(
     (langObj: LanguageOption) =>
       (languageDict[String(langObj.id)] = langObj.name)
   );
 
+  // Typing the selectedLanguage state to use LanguageOption
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({
     id: 63,
     name: "JavaScript (Node.js 12.14.0)",
   });
-  const [userCodeValue, setUserCodeValue] = useState<LanguageOption>({
-    id: 63,
-    name: "// some comment",
-  });
-  const [token, setToken] = useState("");
-  const [isFetchingSubmission, setIsFetchSubmission] = useState(false);
 
+  // Typing the userCodeValue state to store the code value as a string
+  const [userCodeValue, setUserCodeValue] = useState<string>("// some comment");
+
+  // Typing the response from the code execution API as a string for simplicity
+  const [codeResponse, setCodeResponse] = useState<string>("");
+
+  // Typing the code execution status as a boolean
+  const [codeIsExecuting, setCodeIsExecuting] = useState<boolean>(false);
+
+  // Handle code execution
   const handleCodeExecution = () => {
-    /**
-     *  POST -> http://127.0.0.1:2358/submissions/?base64_encoded=false&wait=false
-     *  body -> {
-    "source_code": "print(\"test\")",
-    "language_id": 71
-            }
-     */
+    setCodeIsExecuting(true);
     axios
-      .post(
-        "http://127.0.0.1:2358/submissions/?base64_encoded=false&wait=false",
+      .post<CodeExecutionResponse>(
+        "http://127.0.0.1:2358/submissions/?base64_encoded=false&wait=true",
         {
           source_code: userCodeValue,
           language_id: selectedLanguage.id,
         }
       )
-      .then((response) => {
-        setToken(response.data.token);
-        setIsFetchSubmission(true);
+      .then((response: AxiosResponse<CodeExecutionResponse>) => {
+        setCodeIsExecuting(false);
+        setCodeResponse(response.data.stdout || response.data.stderr || "Execution result not available");
+      })
+      .catch((error: AxiosError) => {
+        setCodeIsExecuting(false);
+        setCodeResponse(error.message || "Error executing code");
       });
   };
 
-  const handleEditorChange = (value: SetStateAction<LanguageOption>) => {
-    setUserCodeValue(value); // Update the state with the current code
+  // Handle changes in the editor
+  const handleEditorChange = (value: string | undefined) => {
+    if (value !== undefined) {
+      setUserCodeValue(value); // Update the state with the current code
+    }
   };
 
+  // Fetch available languages on component mount
   useEffect(() => {
-    fetch("http://127.0.0.1:2358/languages").then((response) =>
-      response.json().then((data) => {
+    fetch("http://127.0.0.1:2358/languages")
+      .then((response) => response.json())
+      .then((data: LanguageOption[]) => {
         console.log("got data", data);
         setLanguages(data);
       })
-    );
+      .catch((error) => {
+        console.error("Error fetching languages:", error);
+      });
   }, []);
-
-  useEffect(() => {
-    let submissionInterval: NodeJS.Timeout;
-    if (isFetchingSubmission) {
-       submissionInterval = setInterval(() => {
-        // fetch submission
-        const result = fetchSubmission(token);
-        // if value found end polling
-        if (result) {
-          setIsFetchSubmission(false);
-          clearInterval(submissionInterval);
-        }
-      }, 10000);
-    }
-
-    return () => clearInterval(submissionInterval);
-  }, [isFetchingSubmission]);
 
   return (
     <>
@@ -122,7 +127,11 @@ export default function Index() {
           </option>
         ))}
       </select>
-      <button onClick={handleCodeExecution}>Execute Code</button>
+      <CodeExecutor 
+        codeIsExecuting={codeIsExecuting} 
+        handleCodeExecution={handleCodeExecution} 
+        codeResponse={codeResponse} 
+      />
     </>
   );
 }
