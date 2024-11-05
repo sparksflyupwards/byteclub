@@ -1,10 +1,11 @@
 import { Editor, useMonaco } from "@monaco-editor/react";
-import type { MetaFunction } from "@remix-run/node";
+import { json, LoaderFunction, type MetaFunction } from "@remix-run/node";
 import { SetStateAction, useEffect, useState } from "react";
 import axios, { AxiosResponse, AxiosError } from "axios";
 import MonacoEditor from "~/components/Editor";
 import { Puff, ThreeDots } from "react-loading-icons";
 import CodeExecutor from "~/components/CodeExecutor";
+import { useLoaderData } from "@remix-run/react";
 
 export const meta: MetaFunction = () => {
   return [
@@ -28,12 +29,18 @@ interface CodeExecutionResponse {
 
 const LOCAL_JUDGE0_HOST = 'http://127.0.0.1:2358'
 const JUDGE0_HOST = "https://judge0-ce.p.rapidapi.com";
-const RAPID_API_KEY = ""
 const RAPID_API_HOST = "judge0-ce.p.rapidapi.com"
+
+// TODO: MOVE FETCHING TO LOADERS, loaders run on the backend. 
+export const loader: LoaderFunction = async () => {
+  const RAPID_API_KEY  = process.env.JUDGE0_SECRET ?? ""; // Accessing server-side environment variable
+  return json({ RAPID_API_KEY: RAPID_API_KEY });
+};
 
 export default function Index() {
   const [languages, setLanguages] = useState<LanguageOption[]>([]); // Typing the languages state as an array of LanguageOption
   const languageDict: Record<string, string> = {}; // Using Record for languageDict to map string keys to string values
+  const { RAPID_API_KEY } = useLoaderData<{ RAPID_API_KEY: string }>();
 
   // Populate the language dictionary
   languages.forEach(
