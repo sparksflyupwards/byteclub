@@ -26,6 +26,11 @@ interface CodeExecutionResponse {
   status: number;
 }
 
+const LOCAL_JUDGE0_HOST = 'http://127.0.0.1:2358'
+const JUDGE0_HOST = "https://judge0-ce.p.rapidapi.com";
+const RAPID_API_KEY = ""
+const RAPID_API_HOST = "judge0-ce.p.rapidapi.com"
+
 export default function Index() {
   const [languages, setLanguages] = useState<LanguageOption[]>([]); // Typing the languages state as an array of LanguageOption
   const languageDict: Record<string, string> = {}; // Using Record for languageDict to map string keys to string values
@@ -54,17 +59,28 @@ export default function Index() {
   // Handle code execution
   const handleCodeExecution = () => {
     setCodeIsExecuting(true);
+     // Adding headers to the axios request for RapidAPI authentication
+     const headers = {
+      "x-rapidapi-key": RAPID_API_KEY,
+      "x-rapidapi-host": RAPID_API_HOST,
+    };
+
     axios
       .post<CodeExecutionResponse>(
-        "http://127.0.0.1:2358/submissions/?base64_encoded=false&wait=true",
+        JUDGE0_HOST + "/submissions/?base64_encoded=false&wait=true",
         {
           source_code: userCodeValue,
           language_id: selectedLanguage.id,
-        }
+        },
+        { headers } // Pass headers here
       )
       .then((response: AxiosResponse<CodeExecutionResponse>) => {
         setCodeIsExecuting(false);
-        setCodeResponse(response.data.stdout || response.data.stderr || "Execution result not available");
+        setCodeResponse(
+          response.data.stdout ||
+            response.data.stderr ||
+            "Execution result not available"
+        );
       })
       .catch((error: AxiosError) => {
         setCodeIsExecuting(false);
@@ -81,7 +97,7 @@ export default function Index() {
 
   // Fetch available languages on component mount
   useEffect(() => {
-    fetch("http://127.0.0.1:2358/languages")
+    fetch(LOCAL_JUDGE0_HOST + "/languages")
       .then((response) => response.json())
       .then((data: LanguageOption[]) => {
         console.log("got data", data);
@@ -95,7 +111,8 @@ export default function Index() {
   return (
     <>
       <Editor
-        height="90vh"
+        height="50vh"
+        width="50vw"
         language={
           selectedLanguage
             ? selectedLanguage.name.split(" ")[0].toLowerCase()
@@ -127,10 +144,10 @@ export default function Index() {
           </option>
         ))}
       </select>
-      <CodeExecutor 
-        codeIsExecuting={codeIsExecuting} 
-        handleCodeExecution={handleCodeExecution} 
-        codeResponse={codeResponse} 
+      <CodeExecutor
+        codeIsExecuting={codeIsExecuting}
+        handleCodeExecution={handleCodeExecution}
+        codeResponse={codeResponse}
       />
     </>
   );
