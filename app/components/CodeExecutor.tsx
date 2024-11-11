@@ -1,6 +1,5 @@
 import { Puff } from "react-loading-icons";
-import { Card, Image, Text, Badge, Button, Group } from '@mantine/core';
-
+import { Button, Box, Text, Paper, Loader } from "@mantine/core";
 
 interface CodeExecutorProps {
   codeIsExecuting: boolean;
@@ -8,32 +7,63 @@ interface CodeExecutorProps {
   codeResponse: string;
 }
 
-const CodeExecutor: React.FC<CodeExecutorProps> = ({ codeIsExecuting, handleCodeExecution, codeResponse }) => {
+const CodeExecutor: React.FC<CodeExecutorProps> = ({
+  codeIsExecuting,
+  handleCodeExecution,
+  codeResponse,
+}) => {
   return (
     <div>
       {codeIsExecuting ? (
         <Puff stroke="#98ff98" />
       ) : (
-        <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Card.Section>
-      <Text fw={500}>Run Code</Text>
-      </Card.Section>
+        <Box
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            backgroundColor: "#145DA0",
+            border: "2px checked black",
+            width: "900px"
+          }}
+        >
+          <Paper
+            shadow="xs"
+            p="xl"
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              width: "400px",
+              textAlign: "center",
+            }}
+          >
+            <Text weight={700} size="lg" style={{ marginBottom: "20px" }}>
+              Code Executor
+            </Text>
 
-      <Text size="sm" c="dimmed">
-      {JSON.stringify(codeResponse)}
-      </Text>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleCodeExecution}
+              style={{
+                marginBottom: "20px",
+                padding: "10px 20px",
+                fontSize: "16px",
+                fontWeight: "bold",
+              }}
+            >
+              Execute Code
+            </Button>
 
-      <Button color="blue" fullWidth mt="md" radius="md" onClick={handleCodeExecution}>
-      Execute Code
-      </Button>
-    </Card>
-        
+            <Text size="sm" color="dimmed">
+              {(codeResponse && JSON.stringify(codeResponse)) ||
+                "Execution result will be displayed here."}
+            </Text>
+          </Paper>
+        </Box>
       )}
     </div>
   );
 };
-
-
-
 
 export default CodeExecutor;

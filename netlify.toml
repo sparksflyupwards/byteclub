@@ -1,7 +1,0 @@
-[dev]
-  # The port you want Netlify Dev to listen on
-  port = 3000
-
-  # The command to run your development server (if any)
-  command = "npm run build && node server.js"  # or whatever command starts your server
-
