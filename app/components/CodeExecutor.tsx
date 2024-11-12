@@ -1,5 +1,5 @@
 import { Puff } from "react-loading-icons";
-import { Button, Box, Text, Paper, Loader } from "@mantine/core";
+import { Button, Box, Text, Paper } from "@mantine/core";
 
 interface CodeExecutorProps {
   codeIsExecuting: boolean;
@@ -23,7 +23,7 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
             flexDirection: "column",
             backgroundColor: "#145DA0",
             border: "2px checked black",
-            width: "900px"
+            width: "900px",
           }}
         >
           <Paper
