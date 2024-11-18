@@ -68,18 +68,19 @@ class Judge0Service {
     console.log(headers);
     return axios
       .post(
-        this.baseUrl + "/submissions/?base64_encoded=false&wait=true",
+        this.baseUrl + "/submissions/?base64_encoded=true&wait=true",
         {
-          source_code: userCodeValue,
+          source_code: Buffer.from(userCodeValue,"utf-8").toString("base64"),
           language_id: selectedLanguage.id,
         },
         { headers }
       )
       .then((response: { data: CodeExecutionResponse }) => {
         // Handle the successful response
+        console.log(response.data)
         return (
-          response.data.stdout ||
-          response.data.stderr ||
+          Buffer.from(response.data.stdout,"base64").toString("utf-8") ||
+          Buffer.from(response.data.stderr,"base64").toString("utf-8")||
           "Execution result not available"
         );
       })
