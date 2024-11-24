@@ -18,13 +18,12 @@ class QuestionService {
                     let tempDescription = "";
 
                     const questionTableString = questionFile.split("---")[1];
+                    const testCaseString = questionFile.split("---")[2];
                     
-
                     for (const line of questionTableString.split('\n')){
                         if (line.includes(":")) {
                             const rowIdentifier = line.split(":")[0].trim();
                             const rowValue = line.split(":")[1].trim();
-                            console.log(rowIdentifier, rowValue);
                             if ( rowIdentifier== "id") {
                                 tempID = rowValue;
                             } else if (rowIdentifier == "title"){
@@ -35,12 +34,34 @@ class QuestionService {
                         }                        
                     }
 
-                    //const testCaseString = 
+                    const inputIdentifiers = new Set<string>();
+                    const inputValues = [];
+                    const outputs = [];
 
-                        //console.log(tempID, tempTitle, tempDescription)
+                    for (const line of testCaseString.split("```")) {
+                        if (line.includes("json")) {
+                            for (const row of line.split("\n")) {
+                                if (row.includes(":")) {
+                                    const rowIdentifier = row.split(":")[0];
+                                    const rowValue = row.split(":")[1];
+                                    inputIdentifiers.add(rowIdentifier);
+                                    inputValues.push(rowValue);
+                                } else if (row.includes("[")) {
+                                    outputs.push(row);
+                                }
+                            }
+                        }
+                        
+                    }
+
+                    const tc = new TestCases([...inputIdentifiers], inputValues, outputs);
+                    const qs = new Question(tempID, tempTitle, tempDescription, tc);
+                    this.questionMDObjects.push(qs);
                 }
               });
         }
+
+        console.log(this.questionMDObjects);
     }
 }
 
@@ -48,15 +69,17 @@ class Question {
     private id: string;
     private title: string;
     private description: string;
+    private testCases: TestCases
 
-    public constructor(id : string, title : string, description:string) {
+    public constructor(id : string, title : string, description:string, testCases:TestCases) {
         this.id = id;
         this.title = title;
-        this.description = description
+        this.description = description;
+        this.testCases = testCases
     }
 }
 
-class TestCase {
+class TestCases {
     private inputs:string[];
     private input_values:string[];
     private expected_output_values:string[];
