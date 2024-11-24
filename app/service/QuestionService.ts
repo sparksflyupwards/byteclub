@@ -60,8 +60,7 @@ class QuestionService {
                 }
               });
         }
-
-        console.log(this.questionMDObjects);
+        
     }
 }
 
