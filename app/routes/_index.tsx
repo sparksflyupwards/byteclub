@@ -14,6 +14,7 @@ import CodeExecutor from "~/components/CodeExecutor";
 import { Form, redirect, useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import Judge0Service from "~/service/Jude0Service";
+import QuestionService from "~/service/QuestionService"
 
 export const meta: MetaFunction = () => {
   return [
@@ -23,6 +24,8 @@ export const meta: MetaFunction = () => {
 };
 // Initialize Judge0 service instance
 const judge0Service = Judge0Service.getInstance();
+
+const questionService = new QuestionService();
 
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {

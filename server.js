@@ -3,7 +3,6 @@ import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import dotenv from 'dotenv';
-import fs from 'node:fs';
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -22,22 +21,6 @@ const remixHandler = createRequestHandler({
 
 dotenv.config();
 const app = express();
-
-const questionsDirectory = "./byteclub-questions"
-
-var fileJSONObjects = []
-
-const questionFiles = fs.readdirSync(questionsDirectory)
-if (questionFiles) {
-  questionFiles.forEach((fileName) => {
-    if (fileName.split(".")[1] === "json") {
-      let tempFile = fs.readFileSync(questionsDirectory + "/" + fileName, "utf-8");
-      let fileJSON = JSON.parse(tempFile)
-      console.log(fileJSON.testCase[0].input)
-      fileJSONObjects.push(fileJSON)
-    }
-  });
-}
 
 app.use(compression());
 
