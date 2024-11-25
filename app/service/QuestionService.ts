@@ -6,61 +6,80 @@ class QuestionService {
     private questionMDObjects: Question[] = []
     private questionsDirectory = "./byteclub-questions"
 
+    private parseQuestionDetails = (questionFile: string) => {
+        const questionTableString = questionFile.split("---")[1];
+        let questionID = "";
+        let questionTitle = "";
+        let questionDescription = "";
+        
+        for (const line of questionTableString.split('\n')){
+            if (line.includes(":")) {
+                const rowIdentifier = line.split(":")[0].trim();
+                const rowValue = line.split(":")[1].trim();
+                if ( rowIdentifier== "id") {
+                    questionID = rowValue;
+                } else if (rowIdentifier == "title"){
+                    questionTitle = rowValue;
+                } else if (rowIdentifier == "description") {
+                    questionDescription = rowValue;
+                }
+            }                        
+        }
+        return [questionID, questionTitle, questionDescription]
+    }
+
+    private parseTestCases = (questionFile:string) => {
+
+        const testCaseString = questionFile.split("---")[2];
+        const inputIdentifiers = new Set<string>();
+        const inputValues:string[] = [];
+        const outputs: string[] = [];
+
+        for (const line of testCaseString.split("```")) {
+            if (line.includes("json")) {
+                for (const row of line.split("\n")) {
+                    if (row.includes(":")) {
+                        const rowIdentifier = row.split(":")[0];
+                        const rowValue = row.split(":")[1];
+                        inputIdentifiers.add(rowIdentifier);
+                        inputValues.push(rowValue);
+                    } else if (row.includes("[")) {
+                        outputs.push(row);
+                    }
+                }
+            }
+        }
+        return [[...inputIdentifiers], inputValues, outputs]
+    }
+    
+    private parseQuestionFiles = (questionFiles:string[]) => {
+        questionFiles.forEach((fileName) => {
+            if (fileName.split(".")[1] === "md") {
+
+                const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
+
+                let inputValues:string[] = [];
+                let outputs:string[] = [];
+                let inputIdentifiers: string[] = [];
+
+                const [questionID, questionTitle, questionDescription] = this.parseQuestionDetails(questionFile);
+
+                [inputIdentifiers, inputValues, outputs] = this.parseTestCases(questionFile);
+
+                const tc = new TestCases(inputIdentifiers, inputValues, outputs);
+                const qs = new Question(questionID, questionTitle, questionDescription, tc);
+                this.questionMDObjects.push(qs);
+            }
+          });
+    }
+    
     public constructor() {
         const questionFiles = fs.readdirSync(this.questionsDirectory)
         if (questionFiles) {
-            questionFiles.forEach((fileName) => {
-                if (fileName.split(".")[1] === "md") {
-
-                    const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
-                    let tempID = "";
-                    let tempTitle = "";
-                    let tempDescription = "";
-
-                    const questionTableString = questionFile.split("---")[1];
-                    const testCaseString = questionFile.split("---")[2];
-                    
-                    for (const line of questionTableString.split('\n')){
-                        if (line.includes(":")) {
-                            const rowIdentifier = line.split(":")[0].trim();
-                            const rowValue = line.split(":")[1].trim();
-                            if ( rowIdentifier== "id") {
-                                tempID = rowValue;
-                            } else if (rowIdentifier == "title"){
-                                tempTitle = rowValue;
-                            } else if (rowIdentifier == "description") {
-                                tempDescription = rowValue;
-                            }
-                        }                        
-                    }
-
-                    const inputIdentifiers = new Set<string>();
-                    const inputValues = [];
-                    const outputs = [];
-
-                    for (const line of testCaseString.split("```")) {
-                        if (line.includes("json")) {
-                            for (const row of line.split("\n")) {
-                                if (row.includes(":")) {
-                                    const rowIdentifier = row.split(":")[0];
-                                    const rowValue = row.split(":")[1];
-                                    inputIdentifiers.add(rowIdentifier);
-                                    inputValues.push(rowValue);
-                                } else if (row.includes("[")) {
-                                    outputs.push(row);
-                                }
-                            }
-                        }
-                        
-                    }
-
-                    const tc = new TestCases([...inputIdentifiers], inputValues, outputs);
-                    const qs = new Question(tempID, tempTitle, tempDescription, tc);
-                    this.questionMDObjects.push(qs);
-                }
-              });
+            this.parseQuestionFiles(questionFiles);
+            console.log(this.questionMDObjects);
         }
-        
+
     }
 }
 
