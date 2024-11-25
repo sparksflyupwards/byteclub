@@ -1,4 +1,5 @@
 import fs from 'node:fs';
+import { Question, TestCases } from '~/interface/QuestionsSchema';
 
 class QuestionService {
 
@@ -76,32 +77,6 @@ class QuestionService {
             console.log(this.questionMDObjects);
         }
 
-    }
-}
-
-class Question {
-    private id: string;
-    private title: string;
-    private description: string;
-    private testCases: TestCases
-
-    public constructor(id : string, title : string, description:string, testCases:TestCases) {
-        this.id = id;
-        this.title = title;
-        this.description = description;
-        this.testCases = testCases
-    }
-}
-
-class TestCases {
-    private inputs:string[];
-    private input_values:string[];
-    private expected_output_values:string[];
-
-    public constructor(inputs: string[], input_values:string[], expected_output_values:string[]) {
-        this.inputs = inputs;
-        this.input_values = input_values;
-        this.expected_output_values = expected_output_values;
     }
 }
 
