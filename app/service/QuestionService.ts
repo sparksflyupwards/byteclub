@@ -58,13 +58,9 @@ class QuestionService {
 
                 const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
 
-                let inputValues:string[] = [];
-                let outputs:string[] = [];
-                let inputIdentifiers: string[] = [];
-
                 const [questionID, questionTitle, questionDescription] = this.parseQuestionDetails(questionFile);
 
-                [inputIdentifiers, inputValues, outputs] = this.parseTestCases(questionFile);
+                const [inputIdentifiers, inputValues, outputs] = this.parseTestCases(questionFile);
 
                 const tc = new TestCases(inputIdentifiers, inputValues, outputs);
                 const qs = new Question(questionID, questionTitle, questionDescription, tc);
