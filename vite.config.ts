@@ -9,14 +9,6 @@ declare module "@remix-run/node" {
 }
 
 export default defineConfig({
-  optimizeDeps: {
-    include:['./app/service/QuestionService.ts']
-  },
-  build:{
-    commonjsOptions: {
-      include: ['./app/service/QuestionService.ts']
-    }
-  },
   plugins: [
     remix({
       future: {
