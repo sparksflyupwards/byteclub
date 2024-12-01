@@ -9,22 +9,12 @@ class QuestionService {
 
     private parseQuestionDetails = (questionFile: string) => {
         const questionTableString = questionFile.split("---")[1];
-        let questionID = "";
-        let questionTitle = "";
+        let questionID = questionTableString.split('\n')[1];
+        let questionTitle = questionTableString.split('\n')[2];
         let questionDescription = "";
-        
-        for (const line of questionTableString.split('\n')){
-            if (line.includes(":")) {
-                const rowIdentifier = line.split(":")[0].trim();
-                const rowValue = line.split(":")[1].trim();
-                if ( rowIdentifier== "id") {
-                    questionID = rowValue;
-                } else if (rowIdentifier == "title"){
-                    questionTitle = rowValue;
-                } else if (rowIdentifier == "description") {
-                    questionDescription = rowValue;
-                }
-            }                        
+
+        for (const line of questionTableString.split('\n').slice(3)){
+            questionDescription += line
         }
         return [questionID, questionTitle, questionDescription]
     }
@@ -74,9 +64,7 @@ class QuestionService {
         const questionFiles = fs.readdirSync(this.questionsDirectory)
         if (questionFiles) {
             this.parseQuestionFiles(questionFiles);
-            console.log(this.questionMDObjects);
         }
-
     }
 }
 
