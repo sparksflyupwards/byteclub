@@ -3,7 +3,6 @@ import compression from "compression";
 import express from "express";
 import morgan from "morgan";
 import dotenv from 'dotenv';
-import QuestionService from './app/service/QuestionService'
 
 const viteDevServer =
   process.env.NODE_ENV === "production"
@@ -48,9 +47,7 @@ app.use(morgan("tiny"));
 // handle SSR requests
 app.all("*", remixHandler);
 
-const questionService = new QuestionService();
-
 const port = process.env.PORT || 80;
-const server = app.listen(port, () =>
+app.listen(port, () =>
   console.log(`Express server listening at http://localhost:${port}`)
 );
