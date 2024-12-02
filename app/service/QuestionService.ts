@@ -9,12 +9,16 @@ class QuestionService {
 
     private parseQuestionDetails = (questionFile: string) => {
         const questionTableString = questionFile.split("---")[1];
-        let questionID = questionTableString.split('\n')[1];
-        let questionTitle = questionTableString.split('\n')[2];
+        let questionID = questionTableString.split('\n')[1].split(':')[1];
+        let questionTitle = questionTableString.split('\n')[2].split(':')[1];
         let questionDescription = "";
 
         for (const line of questionTableString.split('\n').slice(3)){
-            questionDescription += line
+            if (line.includes(":")){
+                questionDescription += line.split(":")[1]
+            } else {
+                questionDescription += line
+            }
         }
         return [questionID, questionTitle, questionDescription]
     }
@@ -65,6 +69,7 @@ class QuestionService {
         if (questionFiles) {
             this.parseQuestionFiles(questionFiles);
         }
+        console.log(this.questionMDObjects)
     }
 }
 
