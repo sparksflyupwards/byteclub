@@ -16,7 +16,6 @@ import { renderToPipeableStream } from "react-dom/server";
 // Load environment variables
 dotenv.config(); // Ensure dotenv is loaded before accessing environment variables
 
-
 const ABORT_DELAY = 5_000;
 
 export default function handleRequest(
