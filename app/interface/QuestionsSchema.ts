@@ -2,13 +2,15 @@ export class Question {
     private id: string;
     private title: string;
     private description: string;
-    private testCases: TestCases
+    private testCases: TestCases;
+    private tags: string[];
 
-    public constructor(id : string, title : string, description:string, testCases:TestCases) {
+    public constructor(id : string, title : string, tags: string[], description:string, testCases:TestCases) {
         this.id = id;
         this.title = title;
+        this.tags = tags;
         this.description = description;
-        this.testCases = testCases
+        this.testCases = testCases;
     }
 }
 

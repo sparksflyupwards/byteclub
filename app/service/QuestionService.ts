@@ -11,16 +11,27 @@ class QuestionService {
         const questionTableString = questionFile.split("---")[1];
         let questionID = questionTableString.split('\n')[1].split(':')[1];
         let questionTitle = questionTableString.split('\n')[2].split(':')[1];
+        let questionTags: string[] = [];
         let questionDescription = "";
-
-        for (const line of questionTableString.split('\n').slice(3)){
+        
+        // get description
+        for (const line of questionTableString.split('\n').slice(4)){
             if (line.includes(":")){
                 questionDescription += line.split(":")[1]
             } else {
                 questionDescription += line
             }
         }
-        return [questionID, questionTitle, questionDescription]
+
+        // remove extra quotes and spaces
+        questionID = questionID.trim()
+        questionTitle = questionTitle.trim().replaceAll('"', '')
+        for (const tag of questionTableString.split('\n')[3].split(':')[1].split(",")) {
+            questionTags.push(tag.trim().replaceAll('"', '').replaceAll('[', '').replaceAll(']', ''));
+        }
+        questionDescription = questionDescription.trim()
+
+        return [questionID, questionTitle, questionTags, questionDescription]
     }
 
     private parseTestCases = (questionFile:string) => {
@@ -34,12 +45,13 @@ class QuestionService {
             if (line.includes("json")) {
                 for (const row of line.split("\n")) {
                     if (row.includes(":")) {
-                        const rowIdentifier = row.split(":")[0];
-                        const rowValue = row.split(":")[1];
+                        const rowIdentifier = row.split(":")[0].trim().replaceAll('"', '');
+                        const rowValue = row.split(":")[1].trim();
                         inputIdentifiers.add(rowIdentifier);
                         inputValues.push(rowValue);
                     } else if (row.includes("[")) {
-                        outputs.push(row);
+                        const output = row.trim()
+                        outputs.push(output);
                     }
                 }
             }
@@ -53,12 +65,13 @@ class QuestionService {
 
                 const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
 
-                const [questionID, questionTitle, questionDescription] = this.parseQuestionDetails(questionFile);
+                const [questionID, questionTitle, questionTags, questionDescription] = this.parseQuestionDetails(questionFile);
 
                 const [inputIdentifiers, inputValues, outputs] = this.parseTestCases(questionFile);
 
                 const tc = new TestCases(inputIdentifiers, inputValues, outputs);
-                const qs = new Question(questionID, questionTitle, questionDescription, tc);
+                console.log(inputIdentifiers, inputValues, outputs)
+                const qs = new Question(questionID as string, questionTitle as string, questionTags as string[], questionDescription as string, tc);
                 this.questionMDObjects.push(qs);
             }
           });
@@ -69,7 +82,6 @@ class QuestionService {
         if (questionFiles) {
             this.parseQuestionFiles(questionFiles);
         }
-        console.log(this.questionMDObjects)
     }
 }
 
