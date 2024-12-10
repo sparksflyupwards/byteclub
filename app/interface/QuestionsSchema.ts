@@ -1,8 +1,8 @@
 export class Question {
     public id: string;
-    private title: string;
-    private description: string;
-    private tags: string[];
+    public title: string;
+    public description: string;
+    public tags: string[];
 
     public constructor(id : string, title : string, tags: string[], description:string) {
         this.id = id;

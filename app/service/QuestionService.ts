@@ -32,10 +32,10 @@ class QuestionService {
             this.parseQuestionFiles(questionFiles);
         }
 
-        console.log("Found the following question test cases")
-        this.questionMDObjects.forEach((questionObj) => {
-            console.log(questionObj.id, this.testCasesJsonObjects.get(questionObj.id))
-        })
+    }
+
+    public getQuestions() {
+        return this.questionMDObjects
     }
 }
 
