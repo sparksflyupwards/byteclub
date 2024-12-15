@@ -45,9 +45,15 @@ export let action = async ({request}) => {
         table.foreign("question_id").references("id").inTable("question").onDelete('CASCADE');
     });
 
-    await Promise.all([createQuestionTable, createTagsTable]);
-    await createTestCasesTable
-    await createQuestionTagsTable
+    try {
+        await Promise.all([createQuestionTable, createTagsTable]);
+        await createTestCasesTable
+        await createQuestionTagsTable
+    } catch (e) {
+        console.error("unable to create tables received the following error: "+ e)
+    }
+
+    
 
     return json({message: "tables created sucess"}, {status:200})
 }

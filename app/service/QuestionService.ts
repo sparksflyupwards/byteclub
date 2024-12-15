@@ -15,8 +15,8 @@ class QuestionService {
         questionFiles.forEach((fileName) => {
             const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
             if (fileName.split(".")[1] === "md") {
-                const [questionID, questionTitle, questionTags, questionDescription] = mdQuestionExtractor.parseQuestionDetails(questionFile);
-                const qs = new Question(questionID as string, questionTitle as string, questionTags as string[], questionDescription as string);
+                const [questionID, questionTitle, questionTags, questionDifficulty, questionDescription] = mdQuestionExtractor.parseQuestionDetails(questionFile);
+                const qs = new Question(questionID as string, questionTitle as string, questionTags as string[][], questionDifficulty as string, questionDescription as string);
                 this.questionMDObjects.push(qs);
             } else if (fileName.split(".")[1] === "json") {
                 const testCaseObj = JSON.parse(questionFile)
@@ -36,6 +36,10 @@ class QuestionService {
 
     public getQuestions() {
         return this.questionMDObjects
+    }
+
+    public getTestCases() {
+        return this.testCasesJsonObjects
     }
 }
 
