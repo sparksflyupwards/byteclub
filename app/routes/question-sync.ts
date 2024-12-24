@@ -1,5 +1,5 @@
 import knex, {Knex} from 'knex';
-import { Question } from '~/interface/QuestionsSchema';
+import { Question, TestCase } from '~/interface/QuestionsSchema';
 import QuestionService from "~/service/QuestionService";
 export let action = async ({request}) => {
 
@@ -16,89 +16,62 @@ export let action = async ({request}) => {
 
     const knexConnection = knex(knex_config);
 
-    const questionService = new QuestionService()
-    
-    // find which question ids are already inserted
-    const alreadyInsertedQuestionIDs = await knexConnection.select("*").from("question");
-    
-    const insertedQuestions = new Set();
-    for (let i = 0; i < alreadyInsertedQuestionIDs.length; i++) {
-       insertedQuestions.add(alreadyInsertedQuestionIDs[i].id + "");
-    }
-    
-    // insert only question ids not seen
-    const questionsToInsert = questionService.getQuestions().filter((question) => !insertedQuestions.has(question.id)).map((question) => ({
-        id: question.id, description: question.description, title: question.title, difficulty: 'EASY'}));
-    
-    if (questionsToInsert.length > 0) {
-        const fillQuestionTable = knexConnection("question").insert(questionsToInsert);
-        try {
-            await fillQuestionTable;
-        } catch (e) {
-            console.error("unable to add questions to question table with the following error "+ e)
-        }
-        
-    }
+    const questionService = new QuestionService();
     
     // update question rows that have changed and gather tags
-    const tagsSet = new Set<string[]>()
-    const currentQuestionMapping = new Map<string, Question>();
-    const testCases = questionService.getTestCases()
+    const tagSet = new Set<string>();
+    const tagIndexToTag = new Map<string, string>();
+    const testCases = questionService.getTestCases();
 
-    const questionsToUpdate = []
-    const testCasesToInsert = []
-    const tagsToInsert = []
+    const testCasesToInsert = [];
+    const tagsToInsert = [];
+    const questionToTagsToInsert = [];
+    const questionsToInsert = [];
     
-    for (const id of testCases.keys()){
-        for (const testCaseID of Object.keys(testCases.get(id))) {
-            const testCaseObj = Object()
-            testCaseObj.question_id = id
-            testCaseObj.input = testCases.get(id)[testCaseID].input
-            testCaseObj.output = testCases.get(id)[testCaseID].output
-            testCasesToInsert.push(testCaseObj)
-        }
+    for (const questionTestCaseID of testCases.keys()) {
+        const questionID = questionTestCaseID.split("-")[0];
+        const testCase = testCases.get(questionTestCaseID);
+        testCasesToInsert.push({id:questionTestCaseID, question_id:questionID, input: JSON.stringify(testCase?.input), output: JSON.stringify(testCase?.output)})
     }
 
-    for (let i = 0; i < alreadyInsertedQuestionIDs.length; i++){
-        currentQuestionMapping.set(alreadyInsertedQuestionIDs[i].id+"", alreadyInsertedQuestionIDs[i]);
-    }
-
+    let tagIndex = 1;
     for (const question of questionService.getQuestions()) {
-        for (const tag of question.tags){
-            tagsSet.add(tag)
-        }
-
-        if (currentQuestionMapping.has(question.id)) {
-            const questionInDb = currentQuestionMapping.get(question.id)
-            const fieldsToUpdate = Object()
-            fieldsToUpdate.id = question.id
-
-            if (questionInDb?.title !== question.title) {
-                fieldsToUpdate.title = question.title
+        // get all tags and their mapping
+        for (const [tag, tagType] of question.tags){
+            
+            if (!tagSet.has(tag)) {
+                tagSet.add(tag);
+                tagIndexToTag.set(tag, tagIndex+"");
+                tagsToInsert.push({id: tagIndex, name: tag, type: tagType , label: tag});
+                tagIndex++;
             }
 
-            if (questionInDb?.description !== question.description) {
-                fieldsToUpdate.description = question.description
-            }
+            questionToTagsToInsert.push({tag_id: tagIndexToTag.get(tag)+"", question_id:question.id});
 
-            if (Object.keys(fieldsToUpdate).length > 1) {
-                questionsToUpdate.push(fieldsToUpdate)
-            } 
         }
-    }
-    let tagIndex = 1
-    for (const key of tagsSet.keys()) {
-        const tagObj = Object()
-        // tagObj.id = tagIndex
-        // tagObj.name = 
-        tagIndex += 1
+        questionsToInsert.push({id:question.id, title:question.title, description: question.description, difficulty: question.difficulty})
     }
 
-    if (questionsToUpdate) {
-        const updateQuestionTable = knex('question').insert(questionsToUpdate).onConflict("id").merge(["description", "title", "difficulty"])
-        await updateQuestionTable
+    if (questionsToInsert.length > 0) {
+        const insertQuestions = knexConnection('question').insert(questionsToInsert).onConflict("id").merge();
+        await insertQuestions;
     }
 
-    return null
+    if (tagsToInsert.length > 0) {
+        const insertTags = knexConnection('tags').insert(tagsToInsert).onConflict("id").merge();
+        await insertTags;
+    }
+
+    if (testCasesToInsert.length > 0) {
+        const insertTestCases = knexConnection('test_cases').insert(testCasesToInsert).onConflict("id").merge();
+        await insertTestCases;
+    }
+
+    if (questionToTagsToInsert.length > 0) {
+        const insertQuestionToTags = knexConnection("question_tags").insert(questionToTagsToInsert).onConflict(['tag_id', 'question_id']).merge();
+        await insertQuestionToTags;
+    }
+
+    return null;
     
 }

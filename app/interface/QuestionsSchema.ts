@@ -5,7 +5,7 @@ export class Question {
     public tags: string[][];
     public difficulty: string;
 
-    public constructor(id : string, title : string, tags: string[][], difficulty:  string, description:string) {
+    public constructor(id: string, title: string, tags: string[][], difficulty: string, description: string) {
         this.id = id;
         this.title = title;
         this.tags = tags;
@@ -14,3 +14,9 @@ export class Question {
     }
 }
 
+export interface TestCase<TInput = any, TOutput = any> {
+    id: number;
+    questionID: number;
+    input: TInput;
+    output: TOutput;
+}

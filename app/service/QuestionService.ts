@@ -1,12 +1,12 @@
 import fs from 'node:fs';
-import { Question} from '~/interface/QuestionsSchema';
+import { Question, TestCase} from '~/interface/QuestionsSchema';
 import MdQuestionExtractor from './MdQuestionExtractor';
 
 class QuestionService {
 
     // instance props 
-    private questionMDObjects: Question[] = []
-    private testCasesJsonObjects = new Map()
+    private questionMDObjects: Question[] = [];
+    private testCasesMapping: Map<string,TestCase> = new Map();
     private questionsDirectory = "./byteclub-questions"
 
     private parseQuestionFiles = (questionFiles:string[]) => {
@@ -19,9 +19,14 @@ class QuestionService {
                 const qs = new Question(questionID as string, questionTitle as string, questionTags as string[][], questionDifficulty as string, questionDescription as string);
                 this.questionMDObjects.push(qs);
             } else if (fileName.split(".")[1] === "json") {
-                const testCaseObj = JSON.parse(questionFile)
-                const questionId = fileName.split(".")[0].replaceAll("testcases", "")
-                this.testCasesJsonObjects.set(questionId, testCaseObj)
+                const questionTestcases = JSON.parse(questionFile);
+                const questionId = fileName.split(".")[0].replaceAll("testcases", "");
+                Object.keys(questionTestcases).forEach((testCaseID) => {
+                    const questionTestCaseID = questionId+"-"+testCaseID
+                    const testCase = { input:questionTestcases[testCaseID].input, output:questionTestcases[testCaseID].output, questionID: Number(questionId), id:Number(testCaseID)} as TestCase
+                    this.testCasesMapping.set(questionTestCaseID,  testCase);
+                });
+                
             }
           });
     }
@@ -39,7 +44,7 @@ class QuestionService {
     }
 
     public getTestCases() {
-        return this.testCasesJsonObjects
+        return this.testCasesMapping
     }
 }
 
