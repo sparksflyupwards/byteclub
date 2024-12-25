@@ -17,7 +17,7 @@ export const loader = async ({request}) => {
     let tagName = url.searchParams.get("tagName");
     
     const knexConnection = knex(knex_config);
-    let resultantQuestions = undefined
+    let resultantQuestions = undefined;
     const getQuestion = knexConnection('question')
     .join('question_tags', 'question.id', 'question_tags.question_id') // Join question with question_tags
     .join('tags', 'question_tags.tag_id', 'tags.id') // Join with tags to get the tag name
