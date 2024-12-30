@@ -1,6 +1,4 @@
-import knex, {Knex} from 'knex';
 import DatabaseConnectionService from '~/database/connection/DatabaseConnectionService';
-import { Question, TestCase } from '~/interface/QuestionsSchema';
 import QuestionParser from "~/questions/QuestionParser";
 export let action = async ({request}) => {
 

@@ -1,5 +1,4 @@
 import { json } from "@remix-run/node";
-import knex, { Knex } from "knex";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 
 
