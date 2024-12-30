@@ -1,25 +1,22 @@
 export class Question {
-    private id: string;
-    private title: string;
-    private description: string;
-    private testCases: TestCases
+    public id: string;
+    public title: string;
+    public description: string;
+    public tags: string[][];
+    public difficulty: string;
 
-    public constructor(id : string, title : string, description:string, testCases:TestCases) {
+    public constructor(id: string, title: string, tags: string[][], difficulty: string, description: string) {
         this.id = id;
         this.title = title;
+        this.tags = tags;
+        this.difficulty = difficulty
         this.description = description;
-        this.testCases = testCases
     }
 }
 
-export class TestCases {
-    private inputs:string[];
-    private input_values:string[];
-    private expected_output_values:string[];
-
-    public constructor(inputs: string[], input_values:string[], expected_output_values:string[]) {
-        this.inputs = inputs;
-        this.input_values = input_values;
-        this.expected_output_values = expected_output_values;
-    }
+export interface TestCase<TInput = any, TOutput = any> {
+    id: number;
+    questionID: number;
+    input: TInput;
+    output: TOutput;
 }

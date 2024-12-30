@@ -1,6 +1,6 @@
 import { json } from "@remix-run/node";
 import { UserCodeSubmission } from "~/interface/CodeExecutionSchema";
-import Judge0Service from "~/service/Jude0Service";
+import Judge0Service from "~/codeExecution/Jude0Service";
 
 // This action will handle the POST request to the '/my-action' route
 export let action = async ({ request }) => {

@@ -13,7 +13,7 @@ import { Puff, ThreeDots } from "react-loading-icons";
 import CodeExecutor from "~/components/CodeExecutor";
 import { Form, redirect, useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
-import Judge0Service from "~/service/Jude0Service";
+import Judge0Service from "~/codeExecution/Jude0Service";
 
 export const meta: MetaFunction = () => {
   return [
