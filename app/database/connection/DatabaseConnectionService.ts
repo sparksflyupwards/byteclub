@@ -5,11 +5,11 @@ class DatabaseConnectionService {
     private knex_config: Knex.Config = {
         client: 'pg',
         connection: {
-            host: 'localhost',
-            port: 5431,
-            user: 'postgres',
-            password: "shakaib",
-            database: "byteclubdb"
+            host: process?.env?.PG_DB_HOST,
+            port: Number(process?.env?.PG_DB_PORT),
+            user: process?.env?.PG_DB_USER,
+            password: process?.env?.PG_DB_PASSWORD,
+            database: process?.env?.PG_DB_DATABASE
         }
     };
     private knexConnection;
@@ -31,4 +31,4 @@ class DatabaseConnectionService {
 
 }
 
-export default DatabaseConnectionService;
+export default DatabaseConnectionService; 

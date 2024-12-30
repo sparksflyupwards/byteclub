@@ -47,7 +47,5 @@ export let action = async ({request}) => {
         console.error("unable to create tables received the following error: "+ e);
     }
 
-    
-
     return json({message: "tables created sucess"}, {status:200});
 }
