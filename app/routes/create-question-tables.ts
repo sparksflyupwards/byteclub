@@ -1,19 +1,11 @@
 import { json } from "@remix-run/node";
 import knex, { Knex } from "knex";
+import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 
 export let action = async ({request}) => {
-    const knex_config: Knex.Config = {
-        client: 'pg',
-        connection: {
-            host: 'localhost',
-            port: 5431,
-            user: 'postgres',
-            password: "shakaib",
-            database: "byteclubdb"
-        }
-    };
+    const databaseConnectionService = DatabaseConnectionService.getInstance();
 
-    const knexConnection = knex(knex_config);
+    const knexConnection = databaseConnectionService.getDatabaseConnection();
 
     const createQuestionTable =  knexConnection.schema.createTableIfNotExists("question", (table) => {
         table.increments("id").primary();

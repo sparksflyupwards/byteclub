@@ -1,22 +1,13 @@
 import knex, {Knex} from 'knex';
+import DatabaseConnectionService from '~/database/connection/DatabaseConnectionService';
 import { Question, TestCase } from '~/interface/QuestionsSchema';
-import QuestionService from "~/service/QuestionService";
+import QuestionParser from "~/questions/QuestionParser";
 export let action = async ({request}) => {
 
-    const knex_config: Knex.Config = {
-        client: 'pg',
-        connection: {
-            host: 'localhost',
-            port: 5431,
-            user: 'postgres',
-            password: "shakaib",
-            database: "byteclubdb"
-        }
-    };
+    const databaseConnectionService = DatabaseConnectionService.getInstance();
+    const knexConnection = databaseConnectionService.getDatabaseConnection();
 
-    const knexConnection = knex(knex_config);
-
-    const questionService = new QuestionService();
+    const questionService = new QuestionParser();
     
     // update question rows that have changed and gather tags
     const tagSet = new Set<string>();

@@ -1,4 +1,4 @@
-class MdQuestionExtractor {
+class MdQuestionParser {
     public parseQuestionDetails = (questionFile: string) => {
         const questionTableString = questionFile.split("---")[1];
         let questionID = questionTableString.split('\n')[1].split(':')[1];
@@ -25,4 +25,4 @@ class MdQuestionExtractor {
     }
 }
 
-export default MdQuestionExtractor;
+export default MdQuestionParser;

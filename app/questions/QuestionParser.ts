@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import { Question, TestCase} from '~/interface/QuestionsSchema';
-import MdQuestionExtractor from './MdQuestionExtractor';
+import MdQuestionParser from './MdQuestionParser';
 
-class QuestionService {
+class QuestionParser {
 
     // instance props 
     private questionMDObjects: Question[] = [];
@@ -10,7 +10,7 @@ class QuestionService {
     private questionsDirectory = "./byteclub-questions"
 
     private parseQuestionFiles = (questionFiles:string[]) => {
-        const mdQuestionExtractor = new MdQuestionExtractor()
+        const mdQuestionExtractor = new MdQuestionParser()
 
         questionFiles.forEach((fileName) => {
             const questionFile = fs.readFileSync(this.questionsDirectory+ "/" + fileName, "utf-8");
@@ -48,4 +48,4 @@ class QuestionService {
     }
 }
 
-export default QuestionService;
+export default QuestionParser;
