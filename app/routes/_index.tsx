@@ -1,19 +1,16 @@
-import { Editor, useMonaco } from "@monaco-editor/react";
+import { Editor } from "@monaco-editor/react";
 import {
-  ActionFunctionArgs,
   json,
   LoaderFunction,
-  LoaderFunctionArgs,
   type MetaFunction,
 } from "@remix-run/node";
-import { SetStateAction, useEffect, useState } from "react";
-import axios, { AxiosResponse, AxiosError } from "axios";
-import MonacoEditor from "~/components/Editor";
-import { Puff, ThreeDots } from "react-loading-icons";
+import { useState } from "react";
 import CodeExecutor from "~/components/CodeExecutor";
-import { Form, redirect, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import Judge0Service from "~/codeExecution/Jude0Service";
+import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
+import QuestionDisplay from "~/components/QuestionDisplay";
 
 export const meta: MetaFunction = () => {
   return [
@@ -24,14 +21,31 @@ export const meta: MetaFunction = () => {
 // Initialize Judge0 service instance
 const judge0Service = Judge0Service.getInstance();
 
+const getQuestions = async () => {
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+  let questions = null;
+  const getQuestionPromise = knexConnection('question').select('question.id', 'question.title', 'question.description', 'question.difficulty').then((qs) => {
+    questions = qs;
+  })
+  
+  try {
+    await getQuestionPromise;
+  } catch (error) {
+    console.error("Error getting question: ", error);
+  }
+  return questions
+}
+
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {
-  const languages = await judge0Service.getLanguageOptions();
-  return json({ languages });
+  const [languages, questions] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions()]) ;
+  return json({languages, questions});
 };
 
 export default function Index() {
-  const { languages } = useLoaderData<{ languages: LanguageOption[] }>();
+  const { languages, questions } = useLoaderData<{ languages: LanguageOption[], questions:any[]}>();
+  const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
   
   // Language dictionary to map IDs to language names
   const languageDict = languages?.reduce((dict, lang) => {
@@ -84,15 +98,33 @@ export default function Index() {
   // Render the editor and controls
   return (
     <div>
-      <Editor
-        height="50vh"
-        width="90vw"
-        theme="vs-dark"
-        language={selectedLanguage?.name.split(" ")[0].toLowerCase()}
-        defaultLanguage={selectedLanguage?.name.split(" ")[0].toLowerCase()}
-        value={userCodeValue}
-        onChange={handleEditorChange}
-      />
+      <div id='questionWithEditor'>
+        <div id='questionDisplay' style={{
+          float:'left',
+          display:'inline',
+          width:'49%',
+        }}>
+          <QuestionDisplay 
+            question={randomQuestion}
+          />
+        </div>
+        <div id='editor' style={{
+          float:'left',
+          display:'inline',
+          width:'49%',
+        }}>
+          <Editor
+            height="50vh"
+            width="90vw"
+            theme="vs-dark"
+            language={selectedLanguage?.name.split(" ")[0].toLowerCase()}
+            defaultLanguage={selectedLanguage?.name.split(" ")[0].toLowerCase()}
+            value={userCodeValue}
+            onChange={handleEditorChange}
+          />
+        </div>
+      </div>
+
       
       <select
         value={String(selectedLanguage?.id)}
