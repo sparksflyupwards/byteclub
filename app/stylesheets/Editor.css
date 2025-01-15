@@ -1,0 +1,10 @@
+.col-box > * {
+    border: 2px solid rgb(96 139 168);
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+.col-box {
+    display: flex;
+    flex-direction: table-row;
+}

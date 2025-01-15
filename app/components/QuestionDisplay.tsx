@@ -1,26 +1,39 @@
 import { Box, Text } from "@mantine/core";
+import '../stylesheets/Editor.css'
 
 interface QuestionDisplayProps {
-    question: any
+    question: any,
+    questionTags: any,
 }
 const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
-    question
+    question,
+    questionTags
 }) => {
+    const tags = questionTags.map((tag) => 
+        <a>{tag?.name}</a>
+    )
+
     return (
-        <div>
+        <div
+        style={{
+          resize: 'horizontal',
+        }}>
             <Box>
                 <Text>
-                    {question?.id}
+                    {question?.id}. {question?.title}
                 </Text>
                 <Text>
-                    {question?.title}
+                    Description: {question?.description}
                 </Text>
                 <Text>
-                    {question?.description}
+                    Difficulty: {question?.difficulty}
                 </Text>
-                <Text>
-                    {question?.difficulty}
-                </Text>
+                <hr />
+                <div class='col-box'>
+                    {tags}
+                </div>
+                
+
             </Box>
         </div>
     )

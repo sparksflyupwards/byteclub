@@ -25,7 +25,9 @@ const getQuestions = async () => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
   const knexConnection = databaseConnectionService.getDatabaseConnection();
   let questions = null;
-  const getQuestionPromise = knexConnection('question').select('question.id', 'question.title', 'question.description', 'question.difficulty').then((qs) => {
+  const getQuestionPromise = knexConnection('question')
+  .select('question.id', 'question.title', 'question.description', 'question.difficulty')
+  .then((qs) => {
     questions = qs;
   })
   
@@ -37,15 +39,42 @@ const getQuestions = async () => {
   return questions
 }
 
+const getQuestionTags = async (question) => {
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+  let questionTags = null;
+
+  const getQuestionTagsPromise = knexConnection('tags')
+  .select('tags.name', 'tags.type')
+  .join('question_tags','question_tags.tag_id', 'tags.id')
+  .where('question_tags.question_id', question?.id)
+  .then((tags) => {
+    questionTags = tags
+  });
+
+  try {
+    await getQuestionTagsPromise;
+  } catch (error) {
+    console.error("Error getting question tags: ", error);
+  }
+  return questionTags;
+}
+
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {
-  const [languages, questions] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions()]) ;
-  return json({languages, questions});
+  const [languages, questions] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions()]);
+  let randomQuestion = null;
+  let randomQuestionsTags = null;
+  if (questions) {
+    randomQuestion = questions[Math.floor(Math.random() * (questions as any[]).length)];
+    randomQuestionsTags = await getQuestionTags(randomQuestion);
+  }
+  return json({languages, randomQuestion, randomQuestionsTags});
 };
 
 export default function Index() {
-  const { languages, questions } = useLoaderData<{ languages: LanguageOption[], questions:any[]}>();
-  const randomQuestion = questions[Math.floor(Math.random() * questions.length)];
+  const { languages, randomQuestion, randomQuestionsTags } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[]}>();
+  
   
   // Language dictionary to map IDs to language names
   const languageDict = languages?.reduce((dict, lang) => {
@@ -98,14 +127,20 @@ export default function Index() {
   // Render the editor and controls
   return (
     <div>
-      <div id='questionWithEditor'>
+      <div id='questionWithEditor'
+        style = {{
+          display: 'inline-block'
+        }}
+      >
         <div id='questionDisplay' style={{
           float:'left',
           display:'inline',
-          width:'49%',
+          width:'30%',
+          resize: 'horizontal',
         }}>
           <QuestionDisplay 
-            question={randomQuestion}
+            question = {randomQuestion}
+            questionTags = {randomQuestionsTags}
           />
         </div>
         <div id='editor' style={{
