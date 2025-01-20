@@ -11,6 +11,7 @@ import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import Judge0Service from "~/codeExecution/Jude0Service";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 import QuestionDisplay from "~/components/QuestionDisplay";
+import '../stylesheets/Index.css'
 
 export const meta: MetaFunction = () => {
   return [
@@ -129,38 +130,35 @@ export default function Index() {
     <div>
       <div id='questionWithEditor'
         style = {{
-          display: 'inline-block'
+          display: 'flex'
         }}
       >
         <div id='questionDisplay' style={{
           float:'left',
-          display:'inline',
-          width:'30%',
           resize: 'horizontal',
+
         }}>
-          <QuestionDisplay 
+          <QuestionDisplay
             question = {randomQuestion}
             questionTags = {randomQuestionsTags}
           />
         </div>
         <div id='editor' style={{
-          float:'left',
           display:'inline',
-          width:'49%',
         }}>
           <Editor
             height="50vh"
-            width="90vw"
+            width="70vw"
             theme="vs-dark"
             language={selectedLanguage?.name.split(" ")[0].toLowerCase()}
             defaultLanguage={selectedLanguage?.name.split(" ")[0].toLowerCase()}
             value={userCodeValue}
             onChange={handleEditorChange}
+            
           />
         </div>
       </div>
 
-      
       <select
         value={String(selectedLanguage?.id)}
         onChange={handleLanguageChange}

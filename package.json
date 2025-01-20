@@ -22,10 +22,13 @@
     "express": "^4.21.1",
     "isbot": "^4.1.0",
     "knex": "^3.1.0",
+    "marked": "^15.0.6",
     "pg": "^8.13.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-loading-icons": "^1.1.0",
+    "react-markdown": "^9.0.3",
+    "remark-gfm": "^4.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2"
   },

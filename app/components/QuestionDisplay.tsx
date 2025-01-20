@@ -1,5 +1,7 @@
 import { Box, Text } from "@mantine/core";
-import '../stylesheets/Editor.css'
+import '../stylesheets/Editor.css';
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface QuestionDisplayProps {
     question: any,
@@ -15,16 +17,15 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
 
     return (
         <div
-        style={{
-          resize: 'horizontal',
+            class='questionDisplay'
+            style={{
+            resize: 'horizontal',
         }}>
             <Box>
                 <Text>
                     {question?.id}. {question?.title}
                 </Text>
-                <Text>
-                    Description: {question?.description}
-                </Text>
+                <ReactMarkdown remarkPlugins={[remarkGfm]} children ={`Description: `+(question?.description as string)} ></ReactMarkdown>
                 <Text>
                     Difficulty: {question?.difficulty}
                 </Text>

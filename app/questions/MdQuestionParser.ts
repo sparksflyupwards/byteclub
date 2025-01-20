@@ -5,22 +5,17 @@ class MdQuestionParser {
         let questionTitle = questionTableString.split('\n')[2].split(':')[1];
         let questionTags: string[][] = JSON.parse(questionTableString.split('\n')[3].split(':')[1]);
         let questionDifficulty = questionTableString.split('\n')[4].split(':')[1].trim().replaceAll("\"", "");
-        let questionDescription = "";
-        
-        // get description
-        for (const line of questionTableString.split('\n').slice(5)){
-            if (line.includes(":")){
-                questionDescription += line.split(":")[1]
-            } else {
-                questionDescription += line
-            }
-        }
+        let questionDescriptionMatch = questionFile.match(/(?<=## Description)(.*)(?=## Test Cases)/s);
+        let questionDescription = null;
 
         // remove extra quotes and spaces
-        questionID = questionID.trim()
-        questionTitle = questionTitle.trim().replaceAll('"', '')
-        questionDescription = questionDescription.trim()
-
+        questionID = questionID.trim();
+        questionTitle = questionTitle.trim().replaceAll('"', '');
+        
+        if (questionDescriptionMatch) {
+            questionDescription = questionDescriptionMatch[0].trim();
+        }
+        
         return [questionID, questionTitle, questionTags, questionDifficulty, questionDescription]
     }
 }

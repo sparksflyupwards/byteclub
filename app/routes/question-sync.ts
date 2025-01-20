@@ -31,7 +31,7 @@ export let action = async ({request}) => {
             if (!tagSet.has(tag)) {
                 tagSet.add(tag);
                 tagIndexToTag.set(tag, tagIndex+"");
-                tagsToInsert.push({id: tagIndex, name: tag, type: tagType , label: tag});
+                tagsToInsert.push({id: tagIndex, name: tag, type: tagType});
                 tagIndex++;
             }
 
