@@ -38,7 +38,7 @@ const getQuestions = async () => {
     console.error("Error getting question: ", error);
   }
   return questions
-}
+};
 
 const getQuestionTags = async (question) => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
@@ -59,24 +59,73 @@ const getQuestionTags = async (question) => {
     console.error("Error getting question tags: ", error);
   }
   return questionTags;
-}
+};
+
+const getClassSignatures = async () => {
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+  let classSignatures = null;
+  const getClassSignaturesPromise = knexConnection('class_definitions')
+  .select('class_definitions.language', 'class_definitions.beginning', 'class_definitions.ending')
+  .then((classDefinitions) => {
+    classSignatures = classDefinitions;
+  });
+
+  try {
+    await getClassSignaturesPromise;
+  } catch (error) {
+    console.error("Error getting class signatures: ", error);
+  }
+  return classSignatures;
+};
+
+const getQuestionFunctionSignatures = async (question) => {
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+  let functionSignatures = null;
+  const getFunctionSignaturesPromise = knexConnection('signatures')
+  .select('signatures.language', 'signatures.signature')
+  .where('signatures.question_id', question?.id)
+  .then((functionDefinition) => {
+    functionSignatures = functionDefinition;
+  });
+
+  try {
+    await getFunctionSignaturesPromise;
+  } catch (error) {
+    console.error("Error getting class signatures: ", error);
+  }
+  return functionSignatures;
+};
 
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {
-  const [languages, questions] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions()]);
+  const [languages, questions, classSignatures] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions(), getClassSignatures()]);
   let randomQuestion = null;
   let randomQuestionsTags = null;
+  let questionFunctionSignatures = null;
+
   if (questions) {
     randomQuestion = questions[Math.floor(Math.random() * (questions as any[]).length)];
     randomQuestionsTags = await getQuestionTags(randomQuestion);
+    questionFunctionSignatures = await getQuestionFunctionSignatures(randomQuestion);
   }
-  return json({languages, randomQuestion, randomQuestionsTags});
+  return json({languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures});
 };
 
 export default function Index() {
-  const { languages, randomQuestion, randomQuestionsTags } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[]}>();
+  const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[]}>();
   
-  
+  const functionSignatureDict = questionFunctionSignatures.reduce((dict, questionFunctionSignature) => {
+    dict[questionFunctionSignature.language] = questionFunctionSignature.signature;
+    return dict;
+  }, {} as Record<string, string>);
+  // Class signature dictionary (language => class signature)
+  const classSignatureDict = classSignatures.reduce((dict, classSignature) => {
+    dict[classSignature.language] = {beginning: classSignature.beginning, ending: classSignature.ending};
+    return dict;
+  }, {} as Record<string, {beginning: string, ending: string}>);
+
   // Language dictionary to map IDs to language names
   const languageDict = languages?.reduce((dict, lang) => {
     dict[String(lang.id)] = lang.name;
@@ -85,13 +134,30 @@ export default function Index() {
 
   // Selected language and editor state
   const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({ id: 63, name: "JavaScript (Node.js 12.14.0)" });
-  const [userCodeValue, setUserCodeValue] = useState<string>("// some comment");
+  const [userCodeValue, setUserCodeValue] = useState<string>((selectedLanguage.name.split(" ")[0] in classSignatureDict ? classSignatureDict[selectedLanguage.name.split(" ")[0]].beginning : "") 
+  + "\n" 
+  + functionSignatureDict[selectedLanguage.name.split(" ")[0]]
+  + "\n"
+  + (selectedLanguage.name.split(" ")[0] in classSignatureDict ? classSignatureDict[selectedLanguage.name.split(" ")[0]].ending:""));
   const [codeResponse, setCodeResponse] = useState<string>("");
   const [codeIsExecuting, setCodeIsExecuting] = useState<boolean>(false);
 
+  // Change editor depending on language
+  const changeEditorOnLanguageChange = (language: string) => {
+    if (language in functionSignatureDict) {
+      
+      setUserCodeValue((language in classSignatureDict ? classSignatureDict[language].beginning : "") 
+        + "\n" 
+        + functionSignatureDict[language]
+        + "\n"
+        + (language in classSignatureDict ? classSignatureDict[language].ending:""));
+    } 
+  }
+  
   // Handle language selection change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedLangId = e.target.value;
+    changeEditorOnLanguageChange(languageDict[selectedLangId].split(" ")[0]);
     setSelectedLanguage({
       id: Number(selectedLangId),
       name: languageDict[selectedLangId]

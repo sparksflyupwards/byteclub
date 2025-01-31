@@ -22,6 +22,20 @@ export let action = async ({request}) => {
         table.foreign("question_id").references('id').inTable("question").onDelete('CASCADE');
     });
 
+    const createSignaturesTable =  knexConnection.schema.createTableIfNotExists("signatures", (table) => {
+        table.integer("question_id").unsigned().notNullable();
+        table.text("language").notNullable();
+        table.text("signature").notNullable();
+        table.foreign("question_id").references('id').inTable("question").onDelete('CASCADE');
+        table.unique(["question_id", "language"]);
+    });
+
+    const createClassDefinitionsTable =  knexConnection.schema.createTableIfNotExists("class_definitions", (table) => {
+        table.text("language").primary();
+        table.text("beginning").notNullable();
+        table.text("ending").notNullable();
+    });
+
     const createTagsTable = knexConnection.schema.createTableIfNotExists("tags", (table) => {
         table.increments("id").primary();
         table.text("name").notNullable();
@@ -29,7 +43,7 @@ export let action = async ({request}) => {
         table.text("label").notNullable();
     });
 
-    const createQuestionTagsTable = knexConnection.schema.createTableIfNotExists("question_tags",(table) => {
+    const createQuestionTagsTable = knexConnection.schema.createTableIfNotExists("question_tags", (table) => {
         table.integer("tag_id").notNullable();
         table.integer("question_id").notNullable();
 
@@ -40,12 +54,13 @@ export let action = async ({request}) => {
     });
 
     try {
-        await Promise.all([createQuestionTable, createTagsTable]);
-        await createTestCasesTable;
-        await createQuestionTagsTable;
+        // seperating these promises bc foreign keys cant reference a table that isnt created
+        await Promise.all([createQuestionTable, createTagsTable, createSignaturesTable, createClassDefinitionsTable]);
+        
+        await Promise.all([createTestCasesTable, createQuestionTagsTable]);
     } catch (e) {
         console.error("unable to create tables received the following error: "+ e);
     }
 
-    return json({message: "tables created sucess"}, {status:200});
+    return json({message: "tables created sucessfully"}, {status:200});
 }
