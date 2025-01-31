@@ -1,27 +1,18 @@
 class MdQuestionParser {
     public parseQuestionDetails = (questionFile: string) => {
         const questionTableString = questionFile.split("---")[1];
-        let questionID = questionTableString.split('\n')[1].split(':')[1];
-        let questionTitle = questionTableString.split('\n')[2].split(':')[1];
-        let questionTags: string[][] = JSON.parse(questionTableString.split('\n')[3].split(':')[1]);
-        let questionDifficulty = questionTableString.split('\n')[4].split(':')[1].trim().replaceAll("\"", "");
-        let questionDescription = "";
+        let id = questionTableString.split('\n')[1].split(':')[1];
+        let title = questionTableString.split('\n')[2].split(':')[1];
+        let tags: string[][] = JSON.parse(questionTableString.split('\n')[3].split(':')[1]);
+        let difficulty = questionTableString.split('\n')[4].split(':')[1].trim().replaceAll("\"", "");
+        let descriptionMatch = questionFile.match(/(?<=## Description)(.*)(?=## Test Cases)/s);
+        let description = descriptionMatch ? descriptionMatch[0].trim() : null;
         
-        // get description
-        for (const line of questionTableString.split('\n').slice(5)){
-            if (line.includes(":")){
-                questionDescription += line.split(":")[1]
-            } else {
-                questionDescription += line
-            }
-        }
-
         // remove extra quotes and spaces
-        questionID = questionID.trim()
-        questionTitle = questionTitle.trim().replaceAll('"', '')
-        questionDescription = questionDescription.trim()
-
-        return [questionID, questionTitle, questionTags, questionDifficulty, questionDescription]
+        id = id.trim();
+        title = title.trim().replaceAll('"', '');
+        
+        return [id, title, tags, difficulty, description]
     }
 }
 
