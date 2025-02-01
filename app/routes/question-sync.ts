@@ -56,15 +56,6 @@ export let action = async ({request}) => {
         questionsToInsert.push({id:question.id, title:question.title, description: question.description, difficulty: question.difficulty})
     }
 
-    if (functionSignaturesToInsert.length > 0) {
-        const insertFunctionSignatures = knexConnection('signatures').insert(functionSignaturesToInsert).onConflict(["question_id", "language"]).merge();
-        try {
-            await insertFunctionSignatures;
-        } catch(error) {
-            console.error("Error adding function signatures: "+ error);
-        };
-    } 
-
     if (classDefinitionsToInsert.length > 0) {
         const insertClassDefinitions = knexConnection('class_definitions').insert(classDefinitionsToInsert).onConflict("language").merge();
         try {
@@ -109,6 +100,15 @@ export let action = async ({request}) => {
             console.error("Error inserting into question_tags table: "+ error);
         }
     }
+
+    if (functionSignaturesToInsert.length > 0) {
+        const insertFunctionSignatures = knexConnection('signatures').insert(functionSignaturesToInsert).onConflict(["question_id", "language"]).merge();
+        try {
+            await insertFunctionSignatures;
+        } catch(error) {
+            console.error("Error adding function signatures: "+ error);
+        };
+    } 
 
     return json({message: "Successfully synced questions"});
     

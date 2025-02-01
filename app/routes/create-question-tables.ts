@@ -40,7 +40,6 @@ export let action = async ({request}) => {
         table.increments("id").primary();
         table.text("name").notNullable();
         table.enu("type", ["COMPANY", "TOPIC"]);
-        table.text("label").notNullable();
     });
 
     const createQuestionTagsTable = knexConnection.schema.createTableIfNotExists("question_tags", (table) => {
