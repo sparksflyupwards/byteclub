@@ -8,52 +8,65 @@ export let action = async ({request}) => {
 
     const questionService = new QuestionParser();
     
-    // update question rows that have changed and gather tags
-    const tagSet = new Set<string>();
-    const tagIndexToTag = new Map<string, string>();
+    const tagToIndex = new Map<string, string>();
+    const languageToIndex = new Map<string, string>();
     const testCases = questionService.getTestCases();
 
     const testCasesToInsert = [];
-    const tagsToInsert = [];
     const questionToTagsToInsert = [];
     const questionsToInsert = [];
-    const classDefinitionsToInsert = Object.keys(questionService.classDefinitions).map((language) =>{
-        const classDefinition = {language:language, beginning:null, ending:null};
-        
-        classDefinition.beginning = questionService.classDefinitions[language]["beginning"];
-        classDefinition.ending = questionService.classDefinitions[language]["end"];
-        
+    const functionSignaturesToInsert = [];
+
+    const classDefinitionsToInsert = Object.keys(questionService.classDefinitions).map((language_id) => {
+        const classDefinition = {language: language_id, beginning: null, ending: null};
+        classDefinition.beginning = questionService.classDefinitions[language_id]["beginning"];
+        classDefinition.ending = questionService.classDefinitions[language_id]["end"];
         return classDefinition;
     });
 
-    const functionSignaturesToInsert = [];
-    
+    const tagDefinitionsToInsert = Object.keys(questionService.tagDefinitions).map((id) => {
+        tagToIndex.set(questionService.tagDefinitions[id]["name"], id);
+        const id_tag = { id: id, name: questionService.tagDefinitions[id]["name"], type: questionService.tagDefinitions[id]["type"]};
+        return id_tag;
+    });
+
+    const languageDefinitions = questionService.parseLanguageDefinitions();
+    Object.keys(languageDefinitions).map((language_id) => {
+        languageToIndex.set(languageDefinitions[language_id].name , language_id);
+    });
+
     for (const questionTestCaseID of testCases.keys()) {
         const questionID = questionTestCaseID.split("-")[0];
         const testCase = testCases.get(questionTestCaseID);
         testCasesToInsert.push({id:questionTestCaseID, question_id:questionID, input: JSON.stringify(testCase?.input), output: JSON.stringify(testCase?.output)})
     }
 
-    let tagIndex = 1;
     for (const question of questionService.getQuestions()) {
         // get all tags and their mapping
         for (const [tag, tagType] of question.tags){
-            
-            if (!tagSet.has(tag)) {
-                tagSet.add(tag);
-                tagIndexToTag.set(tag, tagIndex+"");
-                tagsToInsert.push({id: tagIndex, name: tag, type: tagType});
-                tagIndex++;
-            }
-
-            questionToTagsToInsert.push({tag_id: tagIndexToTag.get(tag)+"", question_id:question.id});
+            questionToTagsToInsert.push({tag_id: tagToIndex.get(tag)+"", question_id:question.id});
         }
         // get all question signatures
         for (const language of question.signature.keys()) {
-            functionSignaturesToInsert.push({question_id: question.id, language: language, signature: question.signature.get(language)});
+            functionSignaturesToInsert.push({question_id: question.id, language_id: languageToIndex.get(language), signature: question.signature.get(language)});
         }
 
         questionsToInsert.push({id:question.id, title:question.title, description: question.description, difficulty: question.difficulty})
+    }
+
+    if (languageDefinitions) {
+        try {
+            const languageDefinitionsToInsert = Object.keys(languageDefinitions).map((id) => {
+                const languageDefinition = {id: id, name: languageDefinitions[id].name, judge0_id: languageDefinitions[id].judge0_id}
+                return languageDefinition
+            });
+            const insertLanguageDefinitions = knexConnection('languages').insert(languageDefinitionsToInsert).onConflict("id").merge();
+            await insertLanguageDefinitions;
+
+            //await languageDefinitionsToInsert;
+        } catch (error) {
+            console.error("Error")
+        }
     }
 
     if (classDefinitionsToInsert.length > 0) {
@@ -74,8 +87,8 @@ export let action = async ({request}) => {
         }
     }
 
-    if (tagsToInsert.length > 0) {
-        const insertTags = knexConnection('tags').insert(tagsToInsert).onConflict("id").merge();
+    if (tagDefinitionsToInsert.length > 0) {
+        const insertTags = knexConnection('tags').insert(tagDefinitionsToInsert).onConflict("id").merge();
         try { 
             await insertTags;
         } catch(error) {
@@ -102,7 +115,7 @@ export let action = async ({request}) => {
     }
 
     if (functionSignaturesToInsert.length > 0) {
-        const insertFunctionSignatures = knexConnection('signatures').insert(functionSignaturesToInsert).onConflict(["question_id", "language"]).merge();
+        const insertFunctionSignatures = knexConnection('signatures').insert(functionSignaturesToInsert).onConflict(["question_id", "language_id"]).merge();
         try {
             await insertFunctionSignatures;
         } catch(error) {
