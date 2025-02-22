@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import { ClassDefinition, Question, TestCase} from '~/interface/QuestionsSchema';
+import { Question, TestCase} from '~/interface/QuestionsSchema';
 import MdQuestionParser from './MdQuestionParser';
 
 class QuestionParser {
@@ -7,15 +7,19 @@ class QuestionParser {
     // instance props 
     private questionMDObjects: Question[] = [];
     private testCasesMapping: Map<string,TestCase> = new Map();
-    private mainDirectory = "./byteclub-questions";
-    private signatureDirectory = "/signatures";
+
+    static mainDirectory = "./byteclub-questions";
+    static definitionsFolder = "/definitions"
+    static signatureSubDirectory = "/signatures";
+
     public classDefinitions = {};
+    public tagDefinitions = {};
 
     private parseQuestionFiles = (questionFolders: string[]) => {
         const mdQuestionExtractor = new MdQuestionParser();
         
         questionFolders.forEach((folderName) => {
-            const questionDirectory = this.mainDirectory + "/" + folderName;
+            const questionDirectory = QuestionParser.mainDirectory + "/" + folderName;
             const questionFiles = fs.readdirSync(questionDirectory);
             questionFiles.forEach((fileName) => {
                 if (fs.statSync(questionDirectory+ "/" + fileName).isFile()) {
@@ -24,7 +28,7 @@ class QuestionParser {
                         // Extract question details from question table in question$id.md
                         const [questionID, questionTitle, questionTags, questionDifficulty, questionDescription ] = 
                         mdQuestionExtractor.parseQuestionDetails(questionFile);
-                        const questionFunctionSignatures = this.parseFunctionSignatures(questionDirectory + this.signatureDirectory);
+                        const questionFunctionSignatures = this.parseFunctionSignatures(questionDirectory + QuestionParser.signatureSubDirectory);
 
                         const qs = new Question(questionID as string, questionTitle as string,
                             questionTags as string[][], questionDifficulty as string, 
@@ -51,9 +55,15 @@ class QuestionParser {
     };
 
     private parseClassDefinitions = () => {
-        const classDefinitionsFile = this.mainDirectory + "/" + "classDefinitions.json";
+        const classDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "classDefinitions.json";
         const classDefinitionString = fs.readFileSync(classDefinitionsFile, "utf-8");
         this.classDefinitions = JSON.parse(classDefinitionString);
+    }
+
+    private parseTagDefinitions = () => {
+        const tagDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "tagDefinitions.json";
+        const tagDefinitionsString = fs.readFileSync(tagDefinitionsFile, "utf-8");
+        this.tagDefinitions = JSON.parse(tagDefinitionsString);
     }
 
     private parseFunctionSignatures = (questionSignatureFolder) => {
@@ -68,8 +78,8 @@ class QuestionParser {
     
     public constructor() {
         this.parseClassDefinitions();
-
-        const questionFolders = fs.readdirSync(this.mainDirectory, {withFileTypes: true}).filter(possibleFolder => possibleFolder.isDirectory()).map(folder => folder.name);
+        this.parseTagDefinitions();
+        const questionFolders = fs.readdirSync(QuestionParser.mainDirectory, {withFileTypes: true}).filter(possibleFolder => (possibleFolder.isDirectory() && possibleFolder.name.includes("question"))).map(folder => folder.name);
 
         if (questionFolders) {
             this.parseQuestionFiles(questionFolders);
@@ -83,6 +93,12 @@ class QuestionParser {
 
     public getTestCases() {
         return this.testCasesMapping;
+    }
+
+    public parseLanguageDefinitions = () => {
+        const languageDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "languageDefinitions.json";
+        const languageDefinitionsString = fs.readFileSync(languageDefinitionsFile, "utf-8");
+        return JSON.parse(languageDefinitionsString);
     }
 }
 

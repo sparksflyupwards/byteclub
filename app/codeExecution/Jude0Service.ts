@@ -71,7 +71,7 @@ class Judge0Service {
         this.baseUrl + "/submissions/?base64_encoded=true&wait=true",
         {
           source_code: Buffer.from(userCodeValue,"utf-8").toString("base64"),
-          language_id: selectedLanguage.id,
+          language_id: selectedLanguage.judge0_id,
         },
         { headers }
       )

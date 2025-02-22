@@ -8,7 +8,6 @@ import { useState } from "react";
 import CodeExecutor from "~/components/CodeExecutor";
 import { useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
-import Judge0Service from "~/codeExecution/Jude0Service";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 import QuestionDisplay from "~/components/QuestionDisplay";
 import '../stylesheets/Index.css'
@@ -19,8 +18,7 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
-// Initialize Judge0 service instance
-const judge0Service = Judge0Service.getInstance();
+
 
 const getQuestions = async () => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
@@ -84,7 +82,7 @@ const getQuestionFunctionSignatures = async (question) => {
   const knexConnection = databaseConnectionService.getDatabaseConnection();
   let functionSignatures = null;
   const getFunctionSignaturesPromise = knexConnection('signatures')
-  .select('signatures.language', 'signatures.signature')
+  .select('signatures.language_id', 'signatures.signature')
   .where('signatures.question_id', question?.id)
   .then((functionDefinition) => {
     functionSignatures = functionDefinition;
@@ -98,9 +96,21 @@ const getQuestionFunctionSignatures = async (question) => {
   return functionSignatures;
 };
 
+const getLanguages = async () => {
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+  const getLanguagesPromise = knexConnection('languages')
+  .select('languages.id', 'languages.name', 'languages.judge0_id')
+  .then((languages) => {
+    return languages
+  });
+
+  return getLanguagesPromise;
+};
+
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {
-  const [languages, questions, classSignatures] = await Promise.all([judge0Service.getLanguageOptions(), getQuestions(), getClassSignatures()]);
+  const [languages, questions, classSignatures] = await Promise.all([getLanguages(), getQuestions(), getClassSignatures()]);
   let randomQuestion = null;
   let randomQuestionsTags = null;
   let questionFunctionSignatures = null;
@@ -116,8 +126,8 @@ export const loader: LoaderFunction = async () => {
 export default function Index() {
   const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[]}>();
   
-  const functionSignatureDict = questionFunctionSignatures.reduce((dict, questionFunctionSignature) => {
-    dict[questionFunctionSignature.language] = questionFunctionSignature.signature;
+  const functionSignatureDict = questionFunctionSignatures?.reduce((dict, questionFunctionSignature) => {
+    dict[questionFunctionSignature.language_id] = questionFunctionSignature.signature;
     return dict;
   }, {} as Record<string, string>);
   // Class signature dictionary (language => class signature)
@@ -128,46 +138,44 @@ export default function Index() {
 
   // Language dictionary to map IDs to language names
   const languageDict = languages?.reduce((dict, lang) => {
-    dict[String(lang.id)] = lang.name;
+    dict[String(lang.id)] = {name: lang.name, judge0_id: lang.judge0_id};
     return dict;
-  }, {} as Record<string, string>) || {};
+  }, {} as Record<string, Object>) || {};
 
   // Selected language and editor state
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({ id: 63, name: "JavaScript (Node.js 12.14.0)" });
-  const [userCodeValue, setUserCodeValue] = useState<string>((selectedLanguage.name.split(" ")[0] in classSignatureDict ? classSignatureDict[selectedLanguage.name.split(" ")[0]].beginning : "") 
-  + "\n" 
-  + functionSignatureDict[selectedLanguage.name.split(" ")[0]]
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({ id: 6, name: "JavaScript", judge0_id: 63 });
+  const [userCodeValue, setUserCodeValue] = useState<string>((selectedLanguage.id in classSignatureDict ? classSignatureDict[selectedLanguage.id].beginning + "\n" : "") 
+  + functionSignatureDict[selectedLanguage.id]
   + "\n"
-  + (selectedLanguage.name.split(" ")[0] in classSignatureDict ? classSignatureDict[selectedLanguage.name.split(" ")[0]].ending:""));
+  + (selectedLanguage.id in classSignatureDict ? classSignatureDict[selectedLanguage.id].ending:""));
   const [codeResponse, setCodeResponse] = useState<string>("");
   const [codeIsExecuting, setCodeIsExecuting] = useState<boolean>(false);
 
   // Change editor depending on language
-  const changeEditorOnLanguageChange = (language: string) => {
-    if (language in functionSignatureDict) {
+  const changeEditorOnLanguageChange = (language_id: string) => {
+    if (language_id in functionSignatureDict) {
       
-      setUserCodeValue((language in classSignatureDict ? classSignatureDict[language].beginning : "") 
-        + "\n" 
-        + functionSignatureDict[language]
+      setUserCodeValue((language_id in classSignatureDict ? classSignatureDict[language_id].beginning + "\n" : "") 
+        + functionSignatureDict[language_id]
         + "\n"
-        + (language in classSignatureDict ? classSignatureDict[language].ending:""));
+        + (language_id in classSignatureDict ? classSignatureDict[language_id].ending : ""));
     } 
   }
   
   // Handle language selection change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedLangId = e.target.value;
-    changeEditorOnLanguageChange(languageDict[selectedLangId].split(" ")[0]);
+    changeEditorOnLanguageChange(selectedLangId);
     setSelectedLanguage({
       id: Number(selectedLangId),
-      name: languageDict[selectedLangId]
+      name: languageDict[selectedLangId].name,
+      judge0_id: languageDict[selectedLangId].judge0_id
     });
   };
 
   // Handle code execution request
   const handleCodeExecution = async () => {
     setCodeIsExecuting(true);
-    
     try {
       const response = await fetch("/code-submission", {
         method: "POST",

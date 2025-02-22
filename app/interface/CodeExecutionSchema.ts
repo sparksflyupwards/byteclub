@@ -1,6 +1,7 @@
 export interface LanguageOption {
   id: number;
   name: string;
+  judge0_id: number;
 }
 
 export interface CodeExecutionResponse {
