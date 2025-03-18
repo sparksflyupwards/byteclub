@@ -19,112 +19,18 @@ export const meta: MetaFunction = () => {
   ];
 };
 
-
-const getQuestions = async () => {
-  const databaseConnectionService = DatabaseConnectionService.getInstance();
-  const knexConnection = databaseConnectionService.getDatabaseConnection();
-  let questions = null;
-  const getQuestionPromise = knexConnection('question')
-  .select('question.id', 'question.title', 'question.description', 'question.difficulty')
-  .then((qs) => {
-    questions = qs;
-  })
-  
-  try {
-    await getQuestionPromise;
-  } catch (error) {
-    console.error("Error getting question: ", error);
-  }
-  return questions
-};
-
-const getQuestionTags = async (question) => {
-  const databaseConnectionService = DatabaseConnectionService.getInstance();
-  const knexConnection = databaseConnectionService.getDatabaseConnection();
-  let questionTags = null;
-
-  const getQuestionTagsPromise = knexConnection('tags')
-  .select('tags.name', 'tags.type')
-  .join('question_tags','question_tags.tag_id', 'tags.id')
-  .where('question_tags.question_id', question?.id)
-  .then((tags) => {
-    questionTags = tags
-  });
-
-  try {
-    await getQuestionTagsPromise;
-  } catch (error) {
-    console.error("Error getting question tags: ", error);
-  }
-  return questionTags;
-};
-
-const getClassSignatures = async () => {
-  const databaseConnectionService = DatabaseConnectionService.getInstance();
-  const knexConnection = databaseConnectionService.getDatabaseConnection();
-  let classSignatures = null;
-  const getClassSignaturesPromise = knexConnection('class_definitions')
-  .select('class_definitions.language', 'class_definitions.beginning', 'class_definitions.ending')
-  .then((classDefinitions) => {
-    classSignatures = classDefinitions;
-  });
-
-  try {
-    await getClassSignaturesPromise;
-  } catch (error) {
-    console.error("Error getting class signatures: ", error);
-  }
-  return classSignatures;
-};
-
-const getQuestionFunctionSignatures = async (question) => {
-  const databaseConnectionService = DatabaseConnectionService.getInstance();
-  const knexConnection = databaseConnectionService.getDatabaseConnection();
-  let functionSignatures = null;
-  const getFunctionSignaturesPromise = knexConnection('signatures')
-  .select('signatures.language_id', 'signatures.signature')
-  .where('signatures.question_id', question?.id)
-  .then((functionDefinition) => {
-    functionSignatures = functionDefinition;
-  });
-
-  try {
-    await getFunctionSignaturesPromise;
-  } catch (error) {
-    console.error("Error getting class signatures: ", error);
-  }
-  return functionSignatures;
-};
-
-const getLanguages = async () => {
-  const databaseConnectionService = DatabaseConnectionService.getInstance();
-  const knexConnection = databaseConnectionService.getDatabaseConnection();
-  const getLanguagesPromise = knexConnection('languages')
-  .select('languages.id', 'languages.name', 'languages.judge0_id')
-  .then((languages) => {
-    return languages
-  });
-
-  return getLanguagesPromise;
-};
+enum CODE_SUBMISSION_DELIMETERS {testcaseEnd = "--TESTCASE_END--", questionIdOutput = "--QUESTION_ID_OUTPUT--"}
 
 // Loader function to fetch languages
 export const loader: LoaderFunction = async () => {
-  const [languages, questions, classSignatures] = await Promise.all([getLanguages(), getQuestions(), getClassSignatures()]);
-  let randomQuestion = null;
-  let randomQuestionsTags = null;
-  let questionFunctionSignatures = null;
-
-  if (questions) {
-    randomQuestion = questions[Math.floor(Math.random() * (questions as any[]).length)];
-    randomQuestionsTags = await getQuestionTags(randomQuestion);
-    questionFunctionSignatures = await getQuestionFunctionSignatures(randomQuestion);
-  }
-  return json({languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures});
+  const backendURL = process?.env?.BACKEND_URL;
+  return await fetch(backendURL+'/index-loader', {
+    method: "GET",
+    headers: { "Content-Type": "application/json" }});
 };
 
 export default function Index() {
-  const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[]}>();
+  const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures, solutionClasses, solutionFunctions, testCases } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[], solutionClasses: Map<string, any>, solutionFunctions: Map<string, any>, testCases: any[]}>();
   
   const functionSignatureDict = questionFunctionSignatures?.reduce((dict, questionFunctionSignature) => {
     dict[questionFunctionSignature.language_id] = questionFunctionSignature.signature;
@@ -143,7 +49,7 @@ export default function Index() {
   }, {} as Record<string, Object>) || {};
 
   // Selected language and editor state
-  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({ id: 6, name: "JavaScript", judge0_id: 63 });
+  const [selectedLanguage, setSelectedLanguage] = useState<LanguageOption>({ id: 8, name: "Python3", judge0_id: 71 });
   const [userCodeValue, setUserCodeValue] = useState<string>((selectedLanguage.id in classSignatureDict ? classSignatureDict[selectedLanguage.id].beginning + "\n" : "") 
   + functionSignatureDict[selectedLanguage.id]
   + "\n"
@@ -164,6 +70,7 @@ export default function Index() {
   
   // Handle language selection change
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    console.log(randomQuestion.id+ "/"+e.target.value);
     const selectedLangId = e.target.value;
     changeEditorOnLanguageChange(selectedLangId);
     setSelectedLanguage({
@@ -173,20 +80,83 @@ export default function Index() {
     });
   };
 
+  // assemble test cases into function invocations currently only working for python 3. id:8
+  const assembleTestCases = (questionId, languageId) => {
+    const solutionClass = solutionClasses[languageId];
+    const solutionFunction = solutionFunctions[questionId +"-"+languageId];
+
+    const solutionClassImport = solutionClass.import ? solutionClass.import: "";
+    const solutionClassStart = solutionClass.start ? solutionClass.start: "";
+    const solutionClassEnd = solutionClass.end ? solutionClass.end : "";
+    const solutionClassPrint = solutionClass.print ? solutionClass.print: "";
+
+    const solutionFunctionStart = solutionFunction.start ? solutionFunction.start : "";
+    const solutionFunctionEnd = solutionFunction.end ? solutionFunction.end : "";
+
+    let testCaseCode =  solutionClassImport+ "\n" + userCodeValue + "\n" + solutionClassStart + "\n";
+
+    testCases.forEach((tc, i) => {
+      testCaseCode += solutionClassPrint + '( "' + tc.id + CODE_SUBMISSION_DELIMETERS.questionIdOutput + '"' + "+" + "str(solution." + solutionFunctionStart;
+      Object.keys(tc.input).forEach((inputKey) => {
+        testCaseCode += JSON.stringify(tc.input[inputKey]) + ",";
+      });
+
+      // remove last comma
+      testCaseCode = testCaseCode.slice(0, -1) + solutionFunctionEnd + ')' + '+"';
+      testCaseCode +=  i < (testCases.length-1)?CODE_SUBMISSION_DELIMETERS.testcaseEnd:"";
+      testCaseCode += '"' + ')\n';
+    })
+    testCaseCode += solutionClassEnd;
+    return testCaseCode;
+  };
+
+  const processTestCaseSubmission = (submissionOutput) => {
+    return submissionOutput.trim().split(CODE_SUBMISSION_DELIMETERS.testcaseEnd).reduce((testcaseSubmissionMap,testcaseSubmission) => {
+      const [testcaseIdText, output] = testcaseSubmission.trim().split(CODE_SUBMISSION_DELIMETERS.questionIdOutput);
+      const testcaseId = testcaseIdText.trim();
+      testcaseSubmissionMap[testcaseId] =  output;
+      return testcaseSubmissionMap;
+    }, {});
+  }
+
+  const checkTestCaseCorrectness = (testCaseOutput) => {
+    let incorrectnessCount = 0
+    let codeSubmissionOutput = ""
+
+    for (const testCaseObj of testCases) {
+      //correctnessStr += "You got: "+ testCaseOutput[testCaseObj.id].replace(/\s+/g, '') + " Expected was: "+ JSON.stringify(testCaseObj.output).replace(/\s+/g, '') + "\n";
+      if (testCaseOutput[testCaseObj.id].replace(/\s+/g, '') == JSON.stringify(testCaseObj.output).replace(/\s+/g, '') ) {
+
+      } else {
+        incorrectnessCount += 1
+        if (incorrectnessCount == 1) {
+          codeSubmissionOutput += `Test case input: ${JSON.stringify(testCaseObj.input)} \n`;
+          codeSubmissionOutput += "You got: "+ testCaseOutput[testCaseObj.id].replace(/\s+/g, '') + " Expected was: "+ JSON.stringify(testCaseObj.output).replace(/\s+/g, '') + "\n";
+        }
+      }
+    }
+    codeSubmissionOutput += " You got "+ (testCases.length - incorrectnessCount) + "/" + testCases.length + " testcases right\n ";
+    return codeSubmissionOutput
+  }
+
   // Handle code execution request
   const handleCodeExecution = async () => {
     setCodeIsExecuting(true);
     try {
+      const codeSubmissionBody = {
+        code: assembleTestCases(randomQuestion.id, selectedLanguage.id),
+        selectedLanguage: selectedLanguage.judge0_id
+      }
+      console.log(JSON.parse(JSON.stringify(codeSubmissionBody)))
       const response = await fetch("/code-submission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: userCodeValue,
-          selectedLanguage
-        })
+        body: JSON.stringify(codeSubmissionBody)
       });
       const data = await response.json();
-      setCodeResponse(data);
+      const testCaseOutputMap = processTestCaseSubmission(data);
+      const testCaseCorrectness = checkTestCaseCorrectness(testCaseOutputMap)
+      setCodeResponse(testCaseCorrectness);
     } catch (error) {
       console.error("Error executing code:", error);
     } finally {

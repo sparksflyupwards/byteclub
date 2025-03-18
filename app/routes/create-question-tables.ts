@@ -56,11 +56,31 @@ export let action = async ({request}) => {
         table.unique(["tag_id", "question_id"]);
     });
 
+    const createSolutionFunctionTable = knexConnection.schema.createTableIfNotExists("solution_function", (table) => {
+        table.integer("language_id").notNullable();
+        table.integer("question_id").notNullable();
+        table.text("start");
+        table.text("end");
+        table.foreign("question_id").references("id").inTable("question").onDelete('CASCADE');
+        table.foreign("language_id").references("id").inTable("languages").onDelete('CASCADE');
+        table.unique(["language_id", "question_id"]);
+    });
+
+    const createSolutionClassTable = knexConnection.schema.createTableIfNotExists("solution_class", (table) => {
+        table.integer("language_id").notNullable();
+        table.text("start");
+        table.text("end");
+        table.text("import");
+        table.text("print");
+        table.foreign("language_id").references("id").inTable("languages").onDelete('CASCADE');
+        table.unique("language_id");
+    });
+
     try {
         // seperating these promises bc foreign keys cant reference a table that isnt created
         await Promise.all([createQuestionTable, createTagsTable, createClassDefinitionsTable, createLanguageTable]);
         
-        await Promise.all([createTestCasesTable, createQuestionTagsTable, createSignaturesTable]);
+        await Promise.all([createTestCasesTable, createQuestionTagsTable, createSignaturesTable, createSolutionClassTable, createSolutionFunctionTable]);
     } catch (e) {
         console.error("unable to create tables received the following error: "+ e);
     }

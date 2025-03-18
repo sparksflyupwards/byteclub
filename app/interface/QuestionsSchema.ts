@@ -23,3 +23,8 @@ export interface TestCase<TInput = any, TOutput = any> {
     input: TInput;
     output: TOutput;
 }
+
+export interface Invocation {
+    start: string;
+    end: string;
+}

@@ -56,22 +56,23 @@ class Judge0Service {
    * @returns {Promise<string>} The result of the code execution.
    */
   public executeCode(
-    userCodeValue: string,
-    selectedLanguage: LanguageOption
+      userCodeValue: string,
+      selectedLanguage: LanguageOption
   ): Promise<string> {
-    if (!userCodeValue || !selectedLanguage || !selectedLanguage.id) {
+    if (!userCodeValue || !selectedLanguage) {
       throw new Error(
         "Missing required parameters: userCodeValue or selectedLanguage"
       );
     }
     const headers = this.baseHeaders;
     console.log(headers);
+    
     return axios
       .post(
         this.baseUrl + "/submissions/?base64_encoded=true&wait=true",
         {
           source_code: Buffer.from(userCodeValue,"utf-8").toString("base64"),
-          language_id: selectedLanguage.judge0_id,
+          language_id: selectedLanguage,
         },
         { headers }
       )
