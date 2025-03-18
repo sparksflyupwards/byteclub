@@ -15,12 +15,15 @@ export let action = async ({request}) => {
     const testCasesToInsert = [];
     const questionToTagsToInsert = [];
     const questionsToInsert = [];
-    const functionSignaturesToInsert = [];
+    const userFunctionSignaturesToInsert = [];
+    const solutionSignaturesToInsert = [];
 
-    const classDefinitionsToInsert = Object.keys(questionService.classDefinitions).map((language_id) => {
-        const classDefinition = {language: language_id, beginning: null, ending: null};
-        classDefinition.beginning = questionService.classDefinitions[language_id]["beginning"];
-        classDefinition.ending = questionService.classDefinitions[language_id]["end"];
+    // Extract values from question service
+
+    const classDefinitionsToInsert = Object.keys(questionService.userClassDefinitions).map((languageId) => {
+        const classDefinition = {language: languageId, beginning: null, ending: null};
+        classDefinition.beginning = questionService.userClassDefinitions[languageId]["beginning"];
+        classDefinition.ending = questionService.userClassDefinitions[languageId]["end"];
         return classDefinition;
     });
 
@@ -30,10 +33,24 @@ export let action = async ({request}) => {
         return id_tag;
     });
 
-    const languageDefinitions = questionService.parseLanguageDefinitions();
-    Object.keys(languageDefinitions).map((language_id) => {
-        languageToIndex.set(languageDefinitions[language_id].name , language_id);
+    const solutionClassesToInsert = Object.keys(questionService.solutionClassDefinitions).map((languageId) => {
+        const solutionClass = questionService.solutionClassDefinitions[languageId];
+        const sc = {language_id: languageId, import: solutionClass["import"], start: solutionClass["start"] , end: solutionClass["end"], print: solutionClass["print"]};
+        return sc;
     });
+
+
+    Object.keys(questionService.languageDefinitions).map((language_id) => {
+        languageToIndex.set(questionService.languageDefinitions[language_id].name , language_id);
+    });
+
+    for (const questionId of questionService.functionMapping.keys()) {
+        const languageMap = questionService.functionMapping.get(questionId)
+        for (const languageId of questionService.functionMapping.get(questionId)?.keys()) {
+            const solutionSignature = { question_id: questionId, language_id:languageId, start: languageMap?.get(languageId).start, end: languageMap?.get(languageId)?.end };
+            solutionSignaturesToInsert.push(solutionSignature);
+        }
+    }
 
     for (const questionTestCaseID of testCases.keys()) {
         const questionID = questionTestCaseID.split("-")[0];
@@ -43,27 +60,27 @@ export let action = async ({request}) => {
 
     for (const question of questionService.getQuestions()) {
         // get all tags and their mapping
-        for (const [tag, tagType] of question.tags){
+        for (const [tag, ] of question.tags){
             questionToTagsToInsert.push({tag_id: tagToIndex.get(tag)+"", question_id:question.id});
         }
         // get all question signatures
         for (const language of question.signature.keys()) {
-            functionSignaturesToInsert.push({question_id: question.id, language_id: languageToIndex.get(language), signature: question.signature.get(language)});
+            userFunctionSignaturesToInsert.push({question_id: question.id, language_id: languageToIndex.get(language), signature: question.signature.get(language)});
         }
 
         questionsToInsert.push({id:question.id, title:question.title, description: question.description, difficulty: question.difficulty})
     }
 
-    if (languageDefinitions) {
+    // Enter values into db
+    if (questionService.languageDefinitions) {
         try {
-            const languageDefinitionsToInsert = Object.keys(languageDefinitions).map((id) => {
-                const languageDefinition = {id: id, name: languageDefinitions[id].name, judge0_id: languageDefinitions[id].judge0_id}
+            const languageDefinitionsToInsert = Object.keys(questionService.languageDefinitions).map((id) => {
+                const languageDefinition = {id: id, name: questionService.languageDefinitions[id].name, judge0_id: questionService.languageDefinitions[id].judge0_id}
                 return languageDefinition
             });
             const insertLanguageDefinitions = knexConnection('languages').insert(languageDefinitionsToInsert).onConflict("id").merge();
             await insertLanguageDefinitions;
 
-            //await languageDefinitionsToInsert;
         } catch (error) {
             console.error("Error")
         }
@@ -114,12 +131,30 @@ export let action = async ({request}) => {
         }
     }
 
-    if (functionSignaturesToInsert.length > 0) {
-        const insertFunctionSignatures = knexConnection('signatures').insert(functionSignaturesToInsert).onConflict(["question_id", "language_id"]).merge();
+    if (userFunctionSignaturesToInsert.length > 0) {
+        const insertFunctionSignatures = knexConnection('signatures').insert(userFunctionSignaturesToInsert).onConflict(["question_id", "language_id"]).merge();
         try {
             await insertFunctionSignatures;
         } catch(error) {
             console.error("Error adding function signatures: "+ error);
+        };
+    }
+
+    if (solutionSignaturesToInsert.length > 0) {
+        const insertSolutionSignature = knexConnection('solution_function').insert(solutionSignaturesToInsert).onConflict(["language_id", "question_id"]).merge();
+        try {
+            await insertSolutionSignature;
+        } catch(error) {
+            console.error("Error adding solution signatures: "+ error);
+        };
+    }
+    
+    if (solutionClassesToInsert.length > 0) {
+        const insertSolutionClasses = knexConnection('solution_class').insert(solutionClassesToInsert).onConflict("language_id").merge();
+        try {
+            await insertSolutionClasses;
+        } catch(error) {
+            console.error("Error adding solution classes: "+ error);
         };
     } 
 

@@ -54,11 +54,13 @@ const CodeExecutor: React.FC<CodeExecutorProps> = ({
             >
               Execute Code
             </Button>
-
-            <Text size="sm" color="dimmed">
-              {(codeResponse && JSON.stringify(codeResponse)) ||
-                "Execution result will be displayed here."}
-            </Text>
+            <div style={{ whiteSpace: "pre-line" }}>
+              {(codeResponse && codeResponse)}
+            </div>
+            {/*<Text size="sm" color="dimmed">*/}
+            {/*  {(codeResponse && JSON.stringify(codeResponse)) ||*/}
+            {/*    "Execution result will be displayed here."}*/}
+            {/*</Text>*/}
           </Paper>
         </Box>
       )}

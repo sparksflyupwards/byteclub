@@ -4,9 +4,12 @@ import Judge0Service from "~/codeExecution/Jude0Service";
 
 // This action will handle the POST request to the '/my-action' route
 export let action = async ({ request }) => {
+  console.log("inside code-submission")
   const judge0Service = Judge0Service.getInstance();
 
   try {
+    console.log(request)
+    console.log("following will be json from code-submission")
     const formData: UserCodeSubmission = await request.json(); // Parse the incoming JSON body
     console.log("Received data:", formData);
 

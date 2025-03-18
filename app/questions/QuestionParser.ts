@@ -1,25 +1,35 @@
 import fs from 'node:fs';
-import { Question, TestCase} from '~/interface/QuestionsSchema';
+import { Invocation, Question, TestCase} from '~/interface/QuestionsSchema';
 import MdQuestionParser from './MdQuestionParser';
+
+enum QUESTION_FOLDERS {
+    mainDirectory = "./byteclub-questions", definitionsFolder = "/definitions", signatureSubDirectory = "/signatures"
+}
+
+enum DEFINITION_FILES {
+    classDefinitions = "classDefinitions.json",
+    tagDefinitions = "tagDefinitions.json",
+    invocationDefinitions = "invocationDefinitions.json",
+    languageDefinitions = "languageDefinitions.json",
+}
 
 class QuestionParser {
 
     // instance props 
     private questionMDObjects: Question[] = [];
     private testCasesMapping: Map<string,TestCase> = new Map();
+    public functionMapping: Map<string, Map<string, Invocation>> = new Map();
 
-    static mainDirectory = "./byteclub-questions";
-    static definitionsFolder = "/definitions"
-    static signatureSubDirectory = "/signatures";
-
-    public classDefinitions = {};
+    public solutionClassDefinitions = {};
+    public userClassDefinitions = {};
     public tagDefinitions = {};
+    public languageDefinitions = {};
 
     private parseQuestionFiles = (questionFolders: string[]) => {
         const mdQuestionExtractor = new MdQuestionParser();
         
         questionFolders.forEach((folderName) => {
-            const questionDirectory = QuestionParser.mainDirectory + "/" + folderName;
+            const questionDirectory = QUESTION_FOLDERS.mainDirectory + "/" + folderName;
             const questionFiles = fs.readdirSync(questionDirectory);
             questionFiles.forEach((fileName) => {
                 if (fs.statSync(questionDirectory+ "/" + fileName).isFile()) {
@@ -28,7 +38,7 @@ class QuestionParser {
                         // Extract question details from question table in question$id.md
                         const [questionID, questionTitle, questionTags, questionDifficulty, questionDescription ] = 
                         mdQuestionExtractor.parseQuestionDetails(questionFile);
-                        const questionFunctionSignatures = this.parseFunctionSignatures(questionDirectory + QuestionParser.signatureSubDirectory);
+                        const questionFunctionSignatures = this.parseFunctionSignatures(questionDirectory + QUESTION_FOLDERS.signatureSubDirectory);
 
                         const qs = new Question(questionID as string, questionTitle as string,
                             questionTags as string[][], questionDifficulty as string, 
@@ -38,11 +48,21 @@ class QuestionParser {
                         const questionTestcases = JSON.parse(questionFile);
                         const questionId = fileName.split(".")[0].replaceAll("testcases", "");
 
-                        Object.keys(questionTestcases).forEach((testCaseID) => {
-                            if (!isNaN(+testCaseID)) {
-                                const questionTestCaseID = questionId+"-"+testCaseID;
-                                const testCase = { input:questionTestcases[testCaseID].input, output:questionTestcases[testCaseID].output, questionID: Number(questionId), id:Number(testCaseID)} as TestCase;
+                        Object.keys(questionTestcases).forEach((testCaseKey) => {
+                            if (!isNaN(+testCaseKey)) {
+                                const questionTestCaseID = questionId+"-"+testCaseKey;
+                                const testCase = { input:questionTestcases[testCaseKey].input, output:questionTestcases[testCaseKey].output, questionID: Number(questionId), id:Number(testCaseKey)} as TestCase;
                                 this.testCasesMapping.set(questionTestCaseID,  testCase);
+                            } else {
+                                if (testCaseKey === "functionInvocation") {
+                                    const invocations = new Map();
+                                    Object.keys(questionTestcases[testCaseKey]).forEach((languageId) => {
+                                        const functionCall = {start: questionTestcases[testCaseKey][languageId].start, end: questionTestcases[testCaseKey][languageId].end} as Invocation;
+                                        invocations.set(languageId, functionCall);
+                                    })
+                                    this.functionMapping.set(questionId, invocations);
+                                }
+
                             }
                         });
                         
@@ -55,16 +75,22 @@ class QuestionParser {
     };
 
     private parseClassDefinitions = () => {
-        const classDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "classDefinitions.json";
+        const classDefinitionsFile = QUESTION_FOLDERS.mainDirectory + QUESTION_FOLDERS.definitionsFolder + "/" + DEFINITION_FILES.classDefinitions;
         const classDefinitionString = fs.readFileSync(classDefinitionsFile, "utf-8");
-        this.classDefinitions = JSON.parse(classDefinitionString);
+        this.userClassDefinitions = JSON.parse(classDefinitionString);
     }
 
     private parseTagDefinitions = () => {
-        const tagDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "tagDefinitions.json";
+        const tagDefinitionsFile = QUESTION_FOLDERS.mainDirectory + QUESTION_FOLDERS.definitionsFolder + "/" + DEFINITION_FILES.tagDefinitions;
         const tagDefinitionsString = fs.readFileSync(tagDefinitionsFile, "utf-8");
         this.tagDefinitions = JSON.parse(tagDefinitionsString);
     }
+
+    private parseSolutionClassDefinitions = () => {
+        const solutionClassFile = QUESTION_FOLDERS.mainDirectory + QUESTION_FOLDERS.definitionsFolder + "/" + DEFINITION_FILES.invocationDefinitions;
+        const solutionClassString = fs.readFileSync(solutionClassFile, "utf-8");
+        this.solutionClassDefinitions = JSON.parse(solutionClassString);
+    };
 
     private parseFunctionSignatures = (questionSignatureFolder) => {
         const signatureFiles = fs.readdirSync(questionSignatureFolder);
@@ -74,17 +100,25 @@ class QuestionParser {
             signatureMap.set(signatureFile.split(".")[0], signature);
         });
         return signatureMap;
-    }
+    };
+
+    private  parseLanguageDefinitions = () => {
+        const languageDefinitionsFile = QUESTION_FOLDERS.mainDirectory + QUESTION_FOLDERS.definitionsFolder + "/" + DEFINITION_FILES.languageDefinitions;
+        const languageDefinitionsString = fs.readFileSync(languageDefinitionsFile, "utf-8");
+        this.languageDefinitions =  JSON.parse(languageDefinitionsString);
+    };
     
     public constructor() {
         this.parseClassDefinitions();
         this.parseTagDefinitions();
-        const questionFolders = fs.readdirSync(QuestionParser.mainDirectory, {withFileTypes: true}).filter(possibleFolder => (possibleFolder.isDirectory() && possibleFolder.name.includes("question"))).map(folder => folder.name);
+        this.parseSolutionClassDefinitions();
+        const questionFolders = fs.readdirSync(QUESTION_FOLDERS.mainDirectory, {withFileTypes: true})
+            .filter(possibleFolder => (possibleFolder.isDirectory() && possibleFolder.name.includes("question")))
+            .map(folder => folder.name);
 
         if (questionFolders) {
             this.parseQuestionFiles(questionFolders);
         }
-
     }
 
     public getQuestions() {
@@ -93,12 +127,6 @@ class QuestionParser {
 
     public getTestCases() {
         return this.testCasesMapping;
-    }
-
-    public parseLanguageDefinitions = () => {
-        const languageDefinitionsFile = QuestionParser.mainDirectory + QuestionParser.definitionsFolder + "/" + "languageDefinitions.json";
-        const languageDefinitionsString = fs.readFileSync(languageDefinitionsFile, "utf-8");
-        return JSON.parse(languageDefinitionsString);
     }
 }
 
