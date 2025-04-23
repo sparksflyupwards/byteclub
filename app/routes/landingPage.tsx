@@ -1,18 +1,51 @@
 // app/routes/_index.tsx
-import { json, type MetaFunction } from "@remix-run/node";
-import { Link } from "@remix-run/react";
-import { useState } from "react";
+import { ActionFunctionArgs, json, type MetaFunction } from "@remix-run/node";
+import { Form, Link, useActionData, useNavigation } from "@remix-run/react";
+import { useEffect, useState } from "react";
 import "../stylesheets/landing.css";
+import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 
 export const meta: MetaFunction = () => {
   return [
-    { title: "ByteClub - Competitive Coding Platform" },
-    { name: "description", content: "Challenge other developers in real-time coding battles!" },
+    { title: "ByteClub - Competitive/Collaborative Coding Platform" },
+    { name: "description", content: "Challenge other developers in real-time coding battles or try our cooperative mode to code together" },
   ];
 };
 
+export async function action({request}: ActionFunctionArgs) {
+  const formData = await request.formData();
+  const name = formData.get("name");
+  const email = formData.get("email");
+
+  const databaseConnectionService = DatabaseConnectionService.getInstance();
+  const knexConnection = databaseConnectionService.getDatabaseConnection();
+
+  const previousSignupCount = await knexConnection('newsletter_signup').count().where('email', email).then((data) => {return data[0].count});
+  
+  if (Number(previousSignupCount) > 0) {
+    return Response.json({message: "You are already signed up for the newsletter"})
+  } 
+
+  const addToNewsletterResult = await knexConnection('newsletter_signup').insert([{name:name, email:email}])
+
+  console.log(addToNewsletterResult)
+  return Response.json({message: "You have been added to the newsletter list!"})
+}
+
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState("login");
+  const navigation = useNavigation();
+  const actionData = useActionData<typeof action>();
+
+  const [formToastVisible, setFormToastVisible] = useState(false);
+
+  // useEffect(()=> {
+  //   if (actionData) {
+  //     setFormToastVisible(true);
+  //   } else {
+  //     setFormToastVisible(false);
+  //   }
+  //   console.log(actionData);
+  // });
 
   return (
     <div className="landing-container">
@@ -27,7 +60,7 @@ export default function LandingPage() {
             <li><a href="#about">About</a></li>
             <li><a href="#features">Features</a></li>
             <li><a href="#demo">Try It Out</a></li>
-            <li><a href="#auth" className="cta-button">Sign In</a></li>
+            
           </ul>
         </nav>
       </header>
@@ -38,7 +71,6 @@ export default function LandingPage() {
           <p>Compete head-to-head with other developers in real-time coding battles</p>
           <div className="hero-buttons">
             <a href="#demo" className="primary-button">Try Demo</a>
-            <a href="#auth" className="secondary-button">Join Now</a>
           </div>
         </div>
         <div className="hero-image">
@@ -68,15 +100,11 @@ export default function LandingPage() {
           </div>
           <div className="about-stats">
             <div className="stat-box">
-              <span className="stat-number">5000+</span>
-              <span className="stat-label">Active Users</span>
-            </div>
-            <div className="stat-box">
-              <span className="stat-number">1000+</span>
+              <span className="stat-number">100+</span>
               <span className="stat-label">Coding Challenges</span>
             </div>
             <div className="stat-box">
-              <span className="stat-number">25+</span>
+              <span className="stat-number">12+</span>
               <span className="stat-label">Programming Languages</span>
             </div>
           </div>
@@ -113,110 +141,34 @@ export default function LandingPage() {
         <h2>Try It Out</h2>
         <p className="demo-intro">Experience the ByteClub coding environment with this interactive demo</p>
         <div className="demo-cta">
-          <Link to="/code-editor" className="primary-button">Launch Demo Editor</Link>
+          <Link to="/" className="primary-button">Launch Demo Editor</Link>
         </div>
       </section>
 
       <section id="auth" className="auth-section">
         <div className="auth-container">
-          <div className="auth-tabs">
-            <button 
-              className={`auth-tab ${activeTab === 'login' ? 'active' : ''}`}
-              onClick={() => setActiveTab('login')}
-            >
-              Log In
-            </button>
-            <button 
-              className={`auth-tab ${activeTab === 'signup' ? 'active' : ''}`}
-              onClick={() => setActiveTab('signup')}
-            >
-              Sign Up
-            </button>
-          </div>
-          
           <div className="auth-form-container">
-            {activeTab === 'login' ? (
-              <form className="auth-form login-form">
+              <Form className="auth-form signup-form" action="/landingPage" method="post">
+                <div>Sign up to get up to date information on ByteClub!</div>
                 <div className="form-group">
-                  <label htmlFor="login-email">Email</label>
-                  <input type="email" id="login-email" required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="login-password">Password</label>
-                  <input type="password" id="login-password" required />
-                </div>
-                <div className="form-footer">
-                  <a href="#" className="forgot-password">Forgot Password?</a>
-                  <button type="submit" className="auth-button">Log In</button>
-                </div>
-              </form>
-            ) : (
-              <form className="auth-form signup-form">
-                <div className="form-group">
-                  <label htmlFor="signup-name">Full Name</label>
-                  <input type="text" id="signup-name" required />
+                  <label htmlFor="signup-name">Name</label>
+                  <input type="text" id="signup-name" name="name" required />
                 </div>
                 <div className="form-group">
                   <label htmlFor="signup-email">Email</label>
-                  <input type="email" id="signup-email" required />
+                  <input type="email" id="signup-email" name="email" required />
                 </div>
-                <div className="form-group">
-                  <label htmlFor="signup-password">Password</label>
-                  <input type="password" id="signup-password" required />
-                </div>
-                <div className="form-group">
-                  <label htmlFor="signup-confirm">Confirm Password</label>
-                  <input type="password" id="signup-confirm" required />
+                <div >
+                  {actionData ? actionData.message : ""}
                 </div>
                 <div className="form-footer">
-                  <button type="submit" className="auth-button">Create Account</button>
+                  <button disabled={navigation.state === 'submitting'} type="submit" className="auth-button">Sign Up For Newsletter</button>
                 </div>
-              </form>
-            )}
+              </Form>
+              
           </div>
         </div>
       </section>
-
-      <footer className="main-footer">
-        <div className="footer-content">
-          <div className="footer-logo">
-            <h2>ByteClub</h2>
-            <p>Code. Compete. Conquer.</p>
-          </div>
-          <div className="footer-links">
-            <div className="footer-column">
-              <h3>Platform</h3>
-              <ul>
-                <li><a href="#">Challenges</a></li>
-                <li><a href="#">Competitions</a></li>
-                <li><a href="#">Leaderboard</a></li>
-                <li><a href="#">Community</a></li>
-              </ul>
-            </div>
-            <div className="footer-column">
-              <h3>Resources</h3>
-              <ul>
-                <li><a href="#">Documentation</a></li>
-                <li><a href="#">API</a></li>
-                <li><a href="#">Blog</a></li>
-                <li><a href="#">FAQ</a></li>
-              </ul>
-            </div>
-            <div className="footer-column">
-              <h3>Company</h3>
-              <ul>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Contact</a></li>
-                <li><a href="#">Privacy Policy</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; 2025 ByteClub. All rights reserved.</p>
-        </div>
-      </footer>
     </div>
   );
 }
