@@ -10,7 +10,8 @@ import { useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 import QuestionDisplay from "~/components/QuestionDisplay";
-import '../stylesheets/Index.css'
+import '../stylesheets/index.css'
+import ResizableHorizontal from "~/components/ResizableHorizontal";
 
 export const meta: MetaFunction = () => {
   return [
@@ -18,7 +19,6 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
-
 
 const getQuestions = async () => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
@@ -202,27 +202,26 @@ export default function Index() {
   // Render the editor and controls
   return (
     <div>
-      <div id='questionWithEditor'
+      <div
         style = {{
           display: 'flex'
-        }}
-      >
-        <div id='questionDisplay' style={{
-          float:'left',
-          resize: 'horizontal',
-
         }}>
+
+        <ResizableHorizontal>
           <QuestionDisplay
             question = {randomQuestion}
             questionTags = {randomQuestionsTags}
           />
-        </div>
-        <div id='editor' style={{
-          display:'inline',
-        }}>
+        </ResizableHorizontal>
+          
+        <div id='editor-with-executor'
+          style={{
+            float:'right',
+            height:'50vh',
+            width:'50vw'
+          }}
+        >
           <Editor
-            height="50vh"
-            width="70vw"
             theme="vs-dark"
             language={selectedLanguage?.name.split(" ")[0].toLowerCase()}
             defaultLanguage={selectedLanguage?.name.split(" ")[0].toLowerCase()}
@@ -230,25 +229,22 @@ export default function Index() {
             onChange={handleEditorChange}
             
           />
+          <select
+            value={String(selectedLanguage?.id)}
+            onChange={handleLanguageChange}>
+              {languages?.map((language) => (
+              <option value={String(language.id)} key={language.id}>
+              {language.name}
+              </option>
+              ))}
+          </select>
+          <CodeExecutor
+            codeIsExecuting={codeIsExecuting}
+            handleCodeExecution={handleCodeExecution}
+            codeResponse={codeResponse}
+          /> 
         </div>
       </div>
-
-      <select
-        value={String(selectedLanguage?.id)}
-        onChange={handleLanguageChange}
-      >
-        {languages?.map((language) => (
-          <option value={String(language.id)} key={language.id}>
-            {language.name}
-          </option>
-        ))}
-      </select>
-
-      <CodeExecutor
-        codeIsExecuting={codeIsExecuting}
-        handleCodeExecution={handleCodeExecution}
-        codeResponse={codeResponse}
-      />
     </div>
   );
 }

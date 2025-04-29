@@ -1,0 +1,24 @@
+.resizable-horizontal {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    height: 200px;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    overflow: hidden;
+  }
+  
+  .content {
+    flex: 1;
+    padding: 10px;
+  }
+  
+  .resizer {
+    width: 10px;
+    cursor: ew-resize;
+    background: #aaa;
+    height: 100%;
+    position: absolute;
+    right: 0;
+    top: 0;
+  }

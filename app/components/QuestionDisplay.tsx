@@ -1,5 +1,5 @@
 import { Box, Text } from "@mantine/core";
-import '../stylesheets/Editor.css';
+import '../stylesheets/questiondisplay.css';
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -16,26 +16,22 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     )
 
     return (
-        <div
-            class='questionDisplay'
-            style={{
-            resize: 'horizontal',
-        }}>
-            <Box>
-                <Text>
-                    {question?.id}. {question?.title}
-                </Text>
-                <ReactMarkdown remarkPlugins={[remarkGfm]} children ={`Description: `+(question?.description as string)} ></ReactMarkdown>
-                <Text>
-                    Difficulty: {question?.difficulty}
-                </Text>
-                <hr />
-                <div class='col-box'>
-                    {tags}
-                </div>
-                
-
-            </Box>
+        <div className="questionDisplay resizeable-horizontal">
+            <div className = "resizeable-horizontal-handle">
+                <Box>
+                    <Text>
+                        {question?.id}. {question?.title}
+                    </Text>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} children ={`Description: `+(question?.description as string)} ></ReactMarkdown>
+                    <Text>
+                        Difficulty: {question?.difficulty}
+                    </Text>
+                    <hr />
+                    <div className='col-box'>
+                        {tags}
+                    </div>
+                </Box>
+            </div>
         </div>
     )
 }
