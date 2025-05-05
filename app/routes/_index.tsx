@@ -229,6 +229,9 @@ export default function Index() {
   // Render the editor and controls
   return (
     <div className="index-container">
+      <header className="app-header">
+        <h1 className="app-title">BYTECLUB</h1>
+      </header>
       <div className="main-layout">
         <TabNavigation 
           tabNames={tabNames}
