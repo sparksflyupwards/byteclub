@@ -1,15 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
-
-@font-face {
-    font-family: 'Retro Mono';
-    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-}
-
-
 .col-box > * {
     border: 2px solid rgb(96 139 168);
     border-radius: 4px;
