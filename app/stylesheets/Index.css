@@ -1,3 +1,13 @@
+<<<<<<< HEAD
+=======
+/* @font-face {
+    font-family: 'Retro Mono';
+    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+} */
+>>>>>>> 514d8d0 (Editor look changes)
 
 .markdown>* {
     all: revert;
@@ -100,7 +110,7 @@
     left: 0;
     right: 0;
     z-index: 1000;
-}
+
 
 .app-title {
     font-family: 'Audiowide', sans-serif;
