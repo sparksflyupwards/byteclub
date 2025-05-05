@@ -1,0 +1,47 @@
+@font-face {
+    font-family: 'Retro Mono';
+    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Retro Stereo';
+    src: url('/fonts/retro-mono-stereo-wide/Retro Stereo Wide.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Audiowide&display=swap');
+
+.col-box > * {
+    border: 2px solid rgb(96 139 168);
+    border-radius: 4px;
+    padding:5px;
+    margin-right: 1vw;
+}
+
+
+.col-box {
+    display: flex;
+    flex-direction: table-row;
+}
+
+hr {
+    margin-right: 5px;
+}
+
+.vertical-tabs-container {
+    display: flex;
+    height: 300px;
+    border: 1px solid #ccc;
+    font-family: 'Audiowide';
+    color:rgba(182, 32, 181, 1);
+}
+
+.tab-content {
+    flex: 1;
+    padding: 20px;
+}

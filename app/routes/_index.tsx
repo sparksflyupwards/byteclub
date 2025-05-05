@@ -10,7 +10,32 @@ import { useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
 import QuestionDisplay from "~/components/QuestionDisplay";
-import '../stylesheets/Index.css'
+import '../stylesheets/index.css'
+import ResizableHorizontal from "~/components/ResizableHorizontal";
+
+interface TabNavigationProps {
+  tabNames: string[];
+  activeTab: number;
+  onTabChange: (index: number) => void;
+}
+
+const TabNavigation: React.FC<TabNavigationProps> = ({ tabNames, activeTab, onTabChange }) => {
+  return (
+    <div className="tab-container">
+      <div className="tabs">
+        {tabNames.map((tabName, index) => (
+          <button 
+            key={index}
+            className={`tab-button ${activeTab === index ? 'active': ''}`}
+            onClick={() => onTabChange(index)}
+          >
+            <span className="vertical-text">{tabName}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 export const meta: MetaFunction = () => {
   return [
@@ -18,7 +43,6 @@ export const meta: MetaFunction = () => {
     { name: "description", content: "Welcome to Remix!" },
   ];
 };
-
 
 const getQuestions = async () => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
@@ -150,6 +174,9 @@ export default function Index() {
   + (selectedLanguage.id in classSignatureDict ? classSignatureDict[selectedLanguage.id].ending:""));
   const [codeResponse, setCodeResponse] = useState<string>("");
   const [codeIsExecuting, setCodeIsExecuting] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const tabNames = ["QUESTION", "AI ASSIST", "NOTEPAD"];
 
   // Change editor depending on language
   const changeEditorOnLanguageChange = (language_id: string) => {
@@ -201,54 +228,54 @@ export default function Index() {
 
   // Render the editor and controls
   return (
-    <div>
-      <div id='questionWithEditor'
-        style = {{
-          display: 'flex'
-        }}
-      >
-        <div id='questionDisplay' style={{
-          float:'left',
-          resize: 'horizontal',
-
-        }}>
+    <div className="index-container">
+      <div className="main-layout">
+        <TabNavigation 
+          tabNames={tabNames}
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
+        
+        <ResizableHorizontal>
           <QuestionDisplay
-            question = {randomQuestion}
-            questionTags = {randomQuestionsTags}
+            question={randomQuestion}
+            questionTags={randomQuestionsTags}
+            activeTab={activeTab}
           />
-        </div>
-        <div id='editor' style={{
-          display:'inline',
-        }}>
+        </ResizableHorizontal>
+
+        <div className="editor-container">
           <Editor
-            height="50vh"
-            width="70vw"
             theme="vs-dark"
             language={selectedLanguage?.name.split(" ")[0].toLowerCase()}
             defaultLanguage={selectedLanguage?.name.split(" ")[0].toLowerCase()}
             value={userCodeValue}
             onChange={handleEditorChange}
-            
           />
         </div>
       </div>
-
+      
       <select
         value={String(selectedLanguage?.id)}
-        onChange={handleLanguageChange}
-      >
+        onChange={handleLanguageChange}>
         {languages?.map((language) => (
           <option value={String(language.id)} key={language.id}>
             {language.name}
           </option>
         ))}
       </select>
-
-      <CodeExecutor
-        codeIsExecuting={codeIsExecuting}
-        handleCodeExecution={handleCodeExecution}
-        codeResponse={codeResponse}
-      />
+      
+      <div id='executor'
+        style={{
+          visibility:"hidden"
+        }}
+      >
+        <CodeExecutor
+          codeIsExecuting={codeIsExecuting}
+          handleCodeExecution={handleCodeExecution}
+          codeResponse={codeResponse}
+        /> 
+      </div>
     </div>
   );
 }
