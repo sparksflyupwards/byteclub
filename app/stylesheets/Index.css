@@ -1,10 +1,4 @@
-/* @font-face {
-    font-family: 'Retro Mono';
-    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-} */
+
 
 .markdown>* {
     all: revert;
