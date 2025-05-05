@@ -52,8 +52,10 @@ const ResizableHorizontal: React.FC<ResizableHorizontalProps> = ({
             className="resizable-horizontal"
             style={{ width: `${width}px`}}
         >
-            <div className="content">{children}</div>
-            <div className="resizer" onMouseDown={startResize} />
+            <div className="content"
+                style={{ width: `${width}px`}}
+            >{children}</div>
+            <div className="resizer" onMouseDown={startResize}>...</div>
         </div>
     );
 };

@@ -3,8 +3,6 @@
     flex-direction: row;
     position: relative;
     height: 100%;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
     overflow: hidden;
   }
   
@@ -15,11 +13,15 @@
   }
   
   .resizer {
-    width: 10px;
+    width: 15px;
+    background:rgba(61, 23, 104, 0.6);
     cursor: ew-resize;
-    background: #aaa;
-    height: 80%;
+    height: 100%;
     position: absolute;
     right: 0;
     top: 0;
+    align-items: center;
+    text-align: center;
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
   }
