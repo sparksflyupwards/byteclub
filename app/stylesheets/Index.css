@@ -104,13 +104,14 @@
 .app-header {
     padding: 1rem;
     background-color: rgba(61, 23, 104, 0.26);
+
     border-bottom: 1.5px solid rgba(182, 32, 181, 1);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-
+}
 
 .app-title {
     font-family: 'Audiowide', sans-serif;
