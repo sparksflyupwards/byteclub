@@ -49,28 +49,35 @@
 }
 
 .tab-button:hover {
-    border-color:rgba(245, 111, 244, 1);
+    border-color: rgba(245, 111, 244, 1);
     background-color: rgba(61, 23, 104, 0.4);
 }
 
 .tab-button.active {
     background-color: rgba(61, 23, 104, 0.6);
-    border-color:rgba(245, 111, 244, 1);
+    border-color: rgba(245, 111, 244, 1);
     color: rgba(245, 111, 244, 1);
 }
 
 .tab-container {
     width: 50px;
-    background-color: #1e1e1e;
-    border-right: 1px solid #333;
+    background-color: transparent;
+    border-right: none;
     height: 100%;
 }
 
 .index-container {
+    padding-top: 5rem; /* Add padding to account for fixed header */
     display: flex;
     flex-direction: column;
     height: 100vh;
     width: 100%;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
 }
 
 .main-layout {
@@ -79,18 +86,27 @@
     flex: 1;
     width: 100%;
     overflow: hidden;
-    height: calc(100vh - 100px); /* Subtract space for language selector and executor */
+    height: calc(100vh - 4rem);
+    padding: 1rem;
 }
 
 .editor-container {
     flex: 1;
     min-width: 0;
     height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .app-header {
     padding: 1rem;
     background-color: rgba(61, 23, 104, 0.26);
+    border-bottom: 1.5px solid rgba(182, 32, 181, 1);
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
 }
 
 .app-title {
@@ -100,3 +116,4 @@
     font-size: 2rem;
     letter-spacing: 2px;
 }
+

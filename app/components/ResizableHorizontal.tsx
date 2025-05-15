@@ -10,7 +10,7 @@ interface ResizableHorizontalProps {
 
 const ResizableHorizontal: React.FC<ResizableHorizontalProps> = ({
     children,
-    minWidth = 100,
+    minWidth = 175,
     maxWidth = 800,
     initialWidth = 300
 }) => {

@@ -259,3 +259,101 @@ h2, h3 {
     filter: blur(25px);
   }
 }
+
+/* Hero Tile Styles */
+.hero-tile {
+  background: rgba(10, 10, 35, 0.8);
+  border: 2px solid var(--primary-color);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin: 1rem 0;
+  box-shadow: 
+    0 0 10px var(--primary-color),
+    0 0 20px rgba(0, 255, 247, 0.2);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-tile::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+  z-index: -1;
+  border-radius: 1rem;
+  opacity: 0.1;
+  transition: opacity 0.3s ease;
+}
+
+.hero-tile:hover {
+  transform: translateY(-5px);
+  box-shadow: 
+    0 0 20px var(--primary-color),
+    0 0 40px rgba(0, 255, 247, 0.3);
+}
+
+.hero-tile:hover::before {
+  opacity: 0.2;
+}
+
+/* Update existing section styles to work with hero tiles */
+.hero-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.feature-card {
+  padding: 1.5rem;
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.about-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.stat-box {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.stat-number {
+  display: block;
+  font-size: 2.5rem;
+  color: var(--secondary-color);
+  text-shadow: 0 0 10px var(--secondary-color);
+  margin-bottom: 0.5rem;
+}
+
+.stat-label {
+  color: var(--primary-light);
+  font-size: 1.1rem;
+}
