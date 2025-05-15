@@ -16,7 +16,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     
     
     const tags = questionTags.map((tag) => 
-        <a>{tag?.name}</a>
+        <a key={tag?.name}>{tag?.name}</a>
     )
 
     const tab1 = (<Box className="vertical-tab-container">
