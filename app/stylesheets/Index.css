@@ -94,22 +94,12 @@
 .app-header {
     padding: 1rem;
     background-color: rgba(61, 23, 104, 0.26);
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 11d4445 (hero tile for landing page and editor changes)
     border-bottom: 1.5px solid rgba(182, 32, 181, 1);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-<<<<<<< HEAD
-
-=======
->>>>>>> 514d8d0 (Editor look changes)
-=======
->>>>>>> 11d4445 (hero tile for landing page and editor changes)
 }
 
 .app-title {
@@ -118,13 +108,4 @@
     margin: 0;
     font-size: 2rem;
     letter-spacing: 2px;
-<<<<<<< HEAD
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 514d8d0 (Editor look changes)
-=======
-}
-
->>>>>>> 11d4445 (hero tile for landing page and editor changes)
