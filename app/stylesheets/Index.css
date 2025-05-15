@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-=======
-/* @font-face {
-    font-family: 'Retro Mono';
-    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-} */
->>>>>>> 514d8d0 (Editor look changes)
 
 .markdown>* {
     all: revert;
@@ -97,21 +87,29 @@
     flex: 1;
     min-width: 0;
     height: 100%;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .app-header {
     padding: 1rem;
     background-color: rgba(61, 23, 104, 0.26);
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 11d4445 (hero tile for landing page and editor changes)
     border-bottom: 1.5px solid rgba(182, 32, 181, 1);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
+<<<<<<< HEAD
 
 =======
 >>>>>>> 514d8d0 (Editor look changes)
+=======
+>>>>>>> 11d4445 (hero tile for landing page and editor changes)
 }
 
 .app-title {
@@ -121,7 +119,12 @@
     font-size: 2rem;
     letter-spacing: 2px;
 <<<<<<< HEAD
+<<<<<<< HEAD
 }
 =======
 }
 >>>>>>> 514d8d0 (Editor look changes)
+=======
+}
+
+>>>>>>> 11d4445 (hero tile for landing page and editor changes)
