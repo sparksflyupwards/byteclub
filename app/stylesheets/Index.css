@@ -1,13 +1,3 @@
-<<<<<<< HEAD
-=======
-/* @font-face {
-    font-family: 'Retro Mono';
-    src: url('/fonts/retro-mono-stereo-wide/Retro Mono Wide.ttf') format('truetype');
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
-} */
->>>>>>> 514d8d0 (Editor look changes)
 
 .markdown>* {
     all: revert;
@@ -104,19 +94,12 @@
 .app-header {
     padding: 1rem;
     background-color: rgba(61, 23, 104, 0.26);
-<<<<<<< HEAD
     border-bottom: 1.5px solid rgba(182, 32, 181, 1);
     position: fixed;
     top: 0;
     left: 0;
     right: 0;
     z-index: 1000;
-<<<<<<< HEAD
-=======
-
-=======
->>>>>>> 514d8d0 (Editor look changes)
->>>>>>> 4cdeb0f (Editor look changes)
 }
 
 .app-title {
@@ -125,8 +108,4 @@
     margin: 0;
     font-size: 2rem;
     letter-spacing: 2px;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 514d8d0 (Editor look changes)
