@@ -1,0 +1,138 @@
+.conversation-display {
+  background-color: var(--dark-color);
+  border: 2px solid var(--primary-color);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.message {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  max-width: 80%;
+}
+
+.message.user {
+  align-self: flex-start;
+  background-color: #0066cc;
+  color: white;
+  box-shadow: 0 0 10px rgba(0, 102, 204, 0.3);
+}
+
+.message.interviewer {
+  align-self: flex-end;
+  background-color: #00cc66;
+  color: white;
+  box-shadow: 0 0 10px rgba(0, 204, 102, 0.3);
+}
+
+.message-origin {
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.message-content {
+  font-size: 1rem;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.message-input-form {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background-color: var(--gray-dark);
+  border-radius: 0.5rem;
+  border: 1px solid var(--primary-color);
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: var(--dark-color);
+  color: var(--primary-light);
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.message-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary-color);
+}
+
+.message-input:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.message-input::placeholder {
+  color: var(--gray-color);
+}
+
+.send-button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.25rem;
+  background-color: var(--primary-color);
+  color: var(--dark-color);
+  font-family: inherit;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.send-button:hover:not(:disabled) {
+  background-color: var(--primary-dark);
+  box-shadow: 0 0 10px var(--primary-color);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.send-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  background-color: var(--gray-light);
+}
+
+/* Scrollbar Styles */
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: var(--dark-color);
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
+}
+
+/* Firefox Scrollbar */
+.messages-container {
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-color) var(--dark-color);
+} 

@@ -1,14 +1,15 @@
 import { Box, Text } from "@mantine/core";
-import '../stylesheets/questiondisplay.css';
+import '../stylesheets/tabdisplay.css';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import ConversationDisplay from "./ConversationDisplay";
 
-interface QuestionDisplayProps {
+interface TabDisplayProps {
     question: any,
     questionTags: any,
     activeTab: number
 }
-const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
+const TabDisplay: React.FC<TabDisplayProps> = ({
     question,
     questionTags,
     activeTab
@@ -19,7 +20,7 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         <a key={tag?.name}>{tag?.name}</a>
     )
 
-    const tab1 = (<Box className="vertical-tab-container">
+    const questionInfoTab = (<Box className="vertical-tab-container">
         <div>
             {question?.id}. {question?.title}
         </div>
@@ -33,11 +34,11 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
         </div>
     </Box>);
 
-    const tab2 = (<Box className="vertical-tab-container"></Box>);
+    const aiAssistantTab = (<Box className="vertical-tab-container"><ConversationDisplay/></Box>);
 
     const tab3 = (<Box className="vertical-tab-container"></Box>);
     
-    const tabContent = [tab1, tab2, tab3];
+    const tabContent = [questionInfoTab, aiAssistantTab, tab3];
 
     return (
         <div className="questionDisplay resizeable-horizontal">
@@ -62,4 +63,4 @@ const QuestionDisplay: React.FC<QuestionDisplayProps> = ({
     )
 }
 
-export default QuestionDisplay;
+export default TabDisplay;
