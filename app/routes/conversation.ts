@@ -10,7 +10,6 @@ interface ConversationResponse {
 }
 
 import OpenAI from "openai";
-import { ChatCompletionMessage } from "openai/resources/index.mjs";
 
 const openai = new OpenAI({
   apiKey: process.env.OPEN_AI_API_KEY,
