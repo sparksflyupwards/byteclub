@@ -12,7 +12,6 @@ import DatabaseConnectionService from "~/database/connection/DatabaseConnectionS
 import TabDisplay from "~/components/TabDisplay";
 import '../stylesheets/index.css'
 import ResizableHorizontal from "~/components/ResizableHorizontal";
-import OpenAI from 'openai';
 
 interface TabNavigationProps {
   tabNames: string[];
