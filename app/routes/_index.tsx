@@ -9,9 +9,10 @@ import CodeExecutor from "~/components/CodeExecutor";
 import { useLoaderData } from "@remix-run/react";
 import { LanguageOption } from "~/interface/CodeExecutionSchema";
 import DatabaseConnectionService from "~/database/connection/DatabaseConnectionService";
-import QuestionDisplay from "~/components/QuestionDisplay";
+import TabDisplay from "~/components/TabDisplay";
 import '../stylesheets/index.css'
 import ResizableHorizontal from "~/components/ResizableHorizontal";
+import OpenAI from 'openai';
 
 interface TabNavigationProps {
   tabNames: string[];
@@ -240,7 +241,7 @@ export default function Index() {
         />
         
         <ResizableHorizontal>
-          <QuestionDisplay
+          <TabDisplay
             question={randomQuestion}
             questionTags={randomQuestionsTags}
             activeTab={activeTab}
