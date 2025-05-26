@@ -1,88 +1,126 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, TextInput, Button, ScrollArea, Text, Paper, Stack } from '@mantine/core';
+import { useFetcher } from '@remix-run/react';
+import { SpeechInput } from './SpeechInput';
 import '../stylesheets/conversationdisplay.css';
 
-enum MessageOrigin {
-  INTERVIEWER = "interviewer",
-  USER = "user"
+interface Message {
+    id: number;
+    text: string;
+    sender: 'user' | 'ai';
+    timestamp: Date;
 }
 
-interface Message {
-  origin: MessageOrigin;
-  content: string;
+interface ChatResponse {
+    content?: string;
+    error?: string;
 }
 
 const ConversationDisplay: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+    const [messages, setMessages] = useState<Message[]>([]);
+    const [inputValue, setInputValue] = useState('INPUT VALUE');
+    const [isLoading, setIsLoading] = useState(false);
+    const viewport = useRef<HTMLDivElement>(null);
+    const fetcher = useFetcher<ChatResponse>();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMessage.trim()) return;
+    const scrollToBottom = () => {
+        if (viewport.current) {
+            viewport.current.scrollTo({ top: viewport.current.scrollHeight, behavior: 'smooth' });
+        }
+    };
 
-    const userMessage = newMessage.trim();
-    setNewMessage('');
-    setMessages(prev => [...prev, { origin: MessageOrigin.USER, content: userMessage }]);
-    setIsLoading(true);
+    useEffect(() => {
+        if (fetcher.data) {
+            if (fetcher.data.error) {
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: `Error: ${fetcher.data?.error}`,
+                    sender: 'ai',
+                    timestamp: new Date()
+                }]);
+            } else if (fetcher.data.content) {
+                setMessages(prev => [...prev, {
+                    id: Date.now(),
+                    text: fetcher.data?.content || '',
+                    sender: 'ai',
+                    timestamp: new Date()
+                }]);
+            }
+            setIsLoading(false);
+            scrollToBottom();
+        }
+    }, [fetcher.data]);
 
-    try {
-      const response = await fetch('/conversation', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt: userMessage }),
-      });
+    const handleSendMessage = (text: string) => {
+        if (!text.trim()) return;
 
-      if (!response.ok) {
-        throw new Error('Failed to get response');
-      }
+        const newMessage: Message = {
+            id: Date.now(),
+            text,
+            sender: 'user',
+            timestamp: new Date()
+        };
 
-      const data = await response.json();
-      setMessages(prev => [...prev, { origin: MessageOrigin.INTERVIEWER, content: data.response }]);
-    } catch (error) {
-      console.error('Error sending message:', error);
-      setMessages(prev => [...prev, { 
-        origin: MessageOrigin.INTERVIEWER, 
-        content: 'Sorry, I encountered an error. Please try again.' 
-      }]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setMessages(prev => [...prev, newMessage]);
+        setInputValue("");
+        setIsLoading(true);
 
-  return (
-    <div className="conversation-display">
-      <div className="messages-container">
-        {messages.map((message, index) => (
-          <div 
-            key={index} 
-            className={`message ${message.origin}`}
-          >
-            <div className="message-origin">{message.origin}</div>
-            <div className="message-content">{message.content}</div>
-          </div>
-        ))}
-      </div>
-      <form onSubmit={handleSubmit} className="message-input-form">
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="message-input"
-          disabled={isLoading}
-        />
-        <button 
-          type="submit" 
-          className="send-button"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Sending...' : 'Send'}
-        </button>
-      </form>
-    </div>
-  );
+        const formattedMessages = messages.map(msg => ({
+            role: msg.sender === 'user' ? 'user' : 'assistant',
+            content: msg.text
+        }));
+
+        const formData = new FormData();
+        formData.append('messages', JSON.stringify([...formattedMessages, { role: 'user', content: text }]));
+
+        fetcher.submit(formData, { method: 'POST', action: '/chat' });
+    };
+
+    const handleSpeechTranscript = (text: string) => {
+        setInputValue(text);
+    };
+
+    return (
+        <Box className="conversation-display">
+            <Text>test</Text>
+            <TextInput
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="Type your message..."
+                        disabled={isLoading}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage(inputValue);
+                            }
+                        }}
+                    />
+
+            <Box className="input-container">
+                <SpeechInput onTranscript={handleSpeechTranscript} />
+                <Box className="text-input-container">
+                    <TextInput
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder="Type your message..."
+                        disabled={isLoading}
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSendMessage(inputValue);
+                            }
+                        }}
+                    />
+                    <Button
+                        onClick={() => handleSendMessage(inputValue)}
+                        disabled={isLoading || !inputValue.trim()}
+                    >
+                        Send CHATE
+                    </Button>
+                </Box>
+            </Box>
+        </Box>
+    );
 };
 
 export default ConversationDisplay;
