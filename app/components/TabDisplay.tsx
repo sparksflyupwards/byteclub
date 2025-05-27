@@ -7,16 +7,21 @@ import ConversationDisplay from "./ConversationDisplay";
 interface TabDisplayProps {
     question: any,
     questionTags: any,
-    activeTab: number
+    activeTab: number,
+    userCode: string,
+    questionDescription: string
 }
 const TabDisplay: React.FC<TabDisplayProps> = ({
     question,
     questionTags,
-    activeTab
+    activeTab,
+    userCode,
+    questionDescription
 }) => {
+
+
     
-    
-    const tags = questionTags.map((tag) => 
+    const tags = questionTags.map((tag: any) => 
         <a key={tag?.name}>{tag?.name}</a>
     )
 
@@ -34,7 +39,7 @@ const TabDisplay: React.FC<TabDisplayProps> = ({
         </div>
     </Box>);
 
-    const aiAssistantTab = (<Box className="vertical-tab-container"><ConversationDisplay/></Box>);
+    const aiAssistantTab = (<Box className="vertical-tab-container"><ConversationDisplay userCode={userCode} questionDescription={questionDescription} /></Box>);
 
     const tab3 = (<Box className="vertical-tab-container"></Box>);
     

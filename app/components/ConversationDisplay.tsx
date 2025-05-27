@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import '../stylesheets/conversationdisplay.css';
+import { LoaderFunction } from '@remix-run/node';
+import { useLoaderData } from '@remix-run/react';
 
 enum MessageOrigin {
-  INTERVIEWER = "interviewer",
-  USER = "user"
+  ASSISTANT = "assistant",
+  USER = "user",
+  SYSTEM = "system"
 }
 
 interface Message {
@@ -11,8 +14,14 @@ interface Message {
   content: string;
 }
 
-const ConversationDisplay: React.FC = () => {
+interface ConversationDisplayProps {
+  userCode: string;
+  questionDescription: string;
+}
+
+const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, questionDescription }) => {
   const [messages, setMessages] = useState<Message[]>([]);
+
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -31,7 +40,7 @@ const ConversationDisplay: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt: userMessage }),
+        body: JSON.stringify({ messages: messages, userCode: userCode, questionDescription: questionDescription }),
       });
 
       if (!response.ok) {
@@ -39,11 +48,11 @@ const ConversationDisplay: React.FC = () => {
       }
 
       const data = await response.json();
-      setMessages(prev => [...prev, { origin: MessageOrigin.INTERVIEWER, content: data.response }]);
+      setMessages(prev => [...prev, { origin: MessageOrigin.ASSISTANT, content: data.response }]);
     } catch (error) {
       console.error('Error sending message:', error);
       setMessages(prev => [...prev, { 
-        origin: MessageOrigin.INTERVIEWER, 
+        origin: MessageOrigin.ASSISTANT, 
         content: 'Sorry, I encountered an error. Please try again.' 
       }]);
     } finally {
@@ -54,7 +63,9 @@ const ConversationDisplay: React.FC = () => {
   return (
     <div className="conversation-display">
       <div className="messages-container">
-        {messages.map((message, index) => (
+        {messages
+          .filter(message => message.origin !== MessageOrigin.SYSTEM)
+          .map((message, index) => (
           <div 
             key={index} 
             className={`message ${message.origin}`}
