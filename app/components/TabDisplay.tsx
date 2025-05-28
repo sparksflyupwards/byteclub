@@ -46,8 +46,8 @@ const TabDisplay: React.FC<TabDisplayProps> = ({
     const tabContent = [questionInfoTab, aiAssistantTab, tab3];
 
     return (
-        <div className="questionDisplay resizeable-horizontal">
-            <div className = "resizeable-horizontal-handle">
+        <div style={{height: "100%"}}>
+            <div style={{height: "100%"}}>
                 {/* <Box>
                     <Text>
                         {question?.id}. {question?.title}

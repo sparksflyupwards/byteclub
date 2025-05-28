@@ -19,7 +19,7 @@
   margin-bottom: 1rem;
   padding-right: 0.5rem;
   padding-bottom: 1rem;
-  max-height: calc(100vh - 200px);
+  max-height: 100vh;
 }
 
 .message {
