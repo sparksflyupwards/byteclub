@@ -63,58 +63,19 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [transcript, setTranscript] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
+  const speak = (text: string) => {
+    const utterance = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(utterance);
+  }
 
   // Set isClient to true when component mounts
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  const autoSendMessage = async () => {
-    console.log('Auto send triggered, current message:', newMessage);
-    if (newMessage.trim() && !isLoading) {
-      console.log('Sending message:', newMessage);
-      const userMessage = newMessage.trim();
-      setNewMessage('');
-      setMessages(prev => [...prev, { origin: MessageOrigin.USER, content: userMessage }]);
-      setIsLoading(true);
-
-      try {
-        const response = await fetch('/conversation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ 
-            messages: [...messages, { origin: MessageOrigin.USER, content: userMessage }], 
-            userCode: userCode, 
-            questionDescription: questionDescription 
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to get response');
-        }
-
-        const data = await response.json();
-        setMessages(prev => [...prev, { origin: MessageOrigin.ASSISTANT, content: data.response }]);
-      } catch (error) {
-        console.error('Error sending message:', error);
-        setMessages(prev => [...prev, {
-          origin: MessageOrigin.ASSISTANT,
-          content: 'Sorry, I encountered an error. Please try again.'
-        }]);
-      } finally {
-        setIsLoading(false);
-      }
-    } else {
-      console.log('Message not sent - empty or loading:', { isEmpty: !newMessage.trim(), isLoading });
-    }
-  };
 
   useEffect(() => {
     if (!isClient) return;
@@ -179,6 +140,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
                 })
                 .then(data => {
                   setMessages(prev => [...prev, { origin: MessageOrigin.ASSISTANT, content: data.response }]);
+                  speak(data.response);
                 })
                 .catch(error => {
                   console.error('Error sending message:', error);
@@ -222,10 +184,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
     recognitionRef.current = recognition;
 
     return () => {
-      console.log('Cleanup: clearing timeout and stopping recognition');
-      if (autoSendTimeoutRef.current) {
-        clearTimeout(autoSendTimeoutRef.current);
-      }
+      console.log('Cleanup: stopping recognition');
       recognition.stop();
     };
   }, [isRecording, messages, userCode, questionDescription, newMessage, isClient]);
