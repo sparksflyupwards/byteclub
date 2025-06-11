@@ -6,11 +6,10 @@ import {
   ScrollRestoration,
 } from "@remix-run/react";
 import type { LinksFunction } from "@remix-run/node";
+import { useEffect, useState } from "react";
 
 import "./tailwind.css";
 import { MantineProvider } from "@mantine/core";
-
-
 
 export function Layout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,9 +30,15 @@ export function Layout({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <MantineProvider>
-      <Outlet />
+      {mounted ? <Outlet /> : null}
     </MantineProvider>
   );
 }
