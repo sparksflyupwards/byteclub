@@ -12,6 +12,7 @@ import DatabaseConnectionService from "~/database/connection/DatabaseConnectionS
 import TabDisplay from "~/components/TabDisplay";
 import '../stylesheets/index.css'
 import ResizableHorizontal from "~/components/ResizableHorizontal";
+import { QuestionQuery } from "~/interface/QuestionsSchema";
 
 interface TabNavigationProps {
   tabNames: string[];
@@ -47,7 +48,7 @@ export const meta: MetaFunction = () => {
 const getQuestions = async () => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
   const knexConnection = databaseConnectionService.getDatabaseConnection();
-  let questions = null;
+  let questions = [] as QuestionQuery[];
   const getQuestionPromise = knexConnection('question')
   .select('question.id', 'question.title', 'question.description', 'question.difficulty')
   .then((qs) => {
@@ -59,10 +60,10 @@ const getQuestions = async () => {
   } catch (error) {
     console.error("Error getting question: ", error);
   }
-  return questions
+  return questions as QuestionQuery[];
 };
 
-const getQuestionTags = async (question) => {
+const getQuestionTags = async (question: QuestionQuery) => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
   const knexConnection = databaseConnectionService.getDatabaseConnection();
   let questionTags = null;
@@ -101,7 +102,7 @@ const getClassSignatures = async () => {
   return classSignatures;
 };
 
-const getQuestionFunctionSignatures = async (question) => {
+const getQuestionFunctionSignatures = async (question: QuestionQuery) => {
   const databaseConnectionService = DatabaseConnectionService.getInstance();
   const knexConnection = databaseConnectionService.getDatabaseConnection();
   let functionSignatures = null;
@@ -140,7 +141,7 @@ export const loader: LoaderFunction = async () => {
   let questionFunctionSignatures = null;
 
   if (questions) {
-    randomQuestion = questions[Math.floor(Math.random() * (questions as any[]).length)];
+    randomQuestion = questions[Math.floor(Math.random() * (questions as any[]).length)] as QuestionQuery;
     randomQuestionsTags = await getQuestionTags(randomQuestion);
     questionFunctionSignatures = await getQuestionFunctionSignatures(randomQuestion);
   }
@@ -148,7 +149,7 @@ export const loader: LoaderFunction = async () => {
 };
 
 export default function Index() {
-  const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures } = useLoaderData<{ languages: LanguageOption[], randomQuestion:any[], randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[]}>();
+  const { languages, randomQuestion, randomQuestionsTags, classSignatures, questionFunctionSignatures } = useLoaderData<{ languages: LanguageOption[], randomQuestion: QuestionQuery, randomQuestionsTags:any[], classSignatures: any[], questionFunctionSignatures: any[]}>();
   
   const functionSignatureDict = questionFunctionSignatures?.reduce((dict, questionFunctionSignature) => {
     dict[questionFunctionSignature.language_id] = questionFunctionSignature.signature;
@@ -244,6 +245,8 @@ export default function Index() {
             question={randomQuestion}
             questionTags={randomQuestionsTags}
             activeTab={activeTab}
+            userCode={userCodeValue}
+            questionDescription={randomQuestion.description}
           />
         </ResizableHorizontal>
 

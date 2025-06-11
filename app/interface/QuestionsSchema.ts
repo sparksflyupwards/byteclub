@@ -23,3 +23,10 @@ export interface TestCase<TInput = any, TOutput = any> {
     input: TInput;
     output: TOutput;
 }
+
+export interface QuestionQuery {
+    id: number;
+    title: string;
+    description: string;
+    difficulty: string;
+}

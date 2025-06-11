@@ -6,7 +6,6 @@
     margin-right: 1vw;
 }
 
-
 .col-box {
     display: flex;
     flex-direction: table-row;
@@ -16,14 +15,13 @@ hr {
     margin-right: 5px;
 }
 
-.vertical-tabs-container {
-    display: flex;
-    height: 300px;
+.vertical-tab-container {
+    height: 100%;
     border: 1px solid #ccc;
     color:rgba(182, 32, 181, 1);
 }
 
 .tab-content {
     flex: 1;
-    padding: 20px;
+    height:100%
 }
