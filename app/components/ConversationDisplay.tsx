@@ -63,19 +63,15 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [isClient, setIsClient] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const autoSendTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isInterviewStarted, setIsInterviewStarted] = useState(false);
+  const [isClient, setIsClient] = useState(true);
+  
   const speak = (text: string) => {
     const utterance = new SpeechSynthesisUtterance(text);
     window.speechSynthesis.speak(utterance);
   }
-
-  // Set isClient to true when component mounts
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   useEffect(() => {
     if (!isClient) return;
@@ -121,6 +117,12 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
                 setMessages(prev => [...prev, { origin: MessageOrigin.USER, content: userMessage }]);
                 setIsLoading(true);
 
+                console.log(JSON.stringify({ 
+                  messages: [...currentMessages, { origin: MessageOrigin.USER, content: userMessage }], 
+                  userCode: userCode, 
+                  questionDescription: questionDescription 
+                }));
+
                 fetch('/conversation', {
                   method: 'POST',
                   headers: {
@@ -153,7 +155,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
                   setIsLoading(false);
                 });
               }
-            }, 2000);
+            }, 1500);
             return newValue;
           });
         } else {
@@ -163,11 +165,8 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
     };
 
     recognition.onend = () => {
+      console.log(" got the end", new Date().toISOString())
       console.log('Recognition ended, isRecording:', isRecording);
-      if (isRecording) {
-        console.log('Restarting recognition');
-        recognition.start();
-      }
     };
 
     // Add event listeners for start and error
@@ -183,6 +182,12 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
 
     recognitionRef.current = recognition;
 
+    // Only start recognition if isRecording is true
+    if (isRecording) {
+      console.log('Starting recognition because isRecording is true');
+      recognition.start();
+    }
+
     return () => {
       console.log('Cleanup: stopping recognition');
       recognition.stop();
@@ -196,11 +201,12 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
         if (isRecording) {
           recognitionRef.current.stop();
           console.log('Stopping recording');
+          setIsRecording(false);
         } else {
           recognitionRef.current.start();
           console.log('Starting recording');
+          setIsRecording(true);
         }
-        setIsRecording(!isRecording);
         console.log('Recording state toggled to:', !isRecording);
       } catch (error) {
         console.error('Error toggling recording:', error);
@@ -267,7 +273,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
 
   return (
     <div className="conversation-display">
-      {isClient && ( // Only render speech recognition UI on client
+      {
         <div className="voice-recorder-container">
           <div style={{ padding: '20px', fontFamily: 'Arial' }}>
             {!isInterviewStarted ? (
@@ -354,7 +360,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
             )}
           </div>
         </div>
-      )}
+      }
       <div className="messages-container">
         {messages
           .filter(message => message.origin !== MessageOrigin.SYSTEM)
