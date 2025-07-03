@@ -155,7 +155,7 @@ const ConversationDisplay: React.FC<ConversationDisplayProps> = ({ userCode, que
                   setIsLoading(false);
                 });
               }
-            }, 2000);
+            }, 1500);
             return newValue;
           });
         } else {
